@@ -1,4 +1,6 @@
 {
+  "pylint.cwd": "/venv/bin/python",
   "codeium.enableCodeLens": false,
-  "editor.tabSize": 4
+  "editor.tabSize": 4,
+  "editor.defaultFormatter": "ms-python.black-formatter"
 }
