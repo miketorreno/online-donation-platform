@@ -90,7 +90,9 @@ class Command(BaseCommand):
             user.save()
 
         if options["force"]:
-            deleted, _ = Campaign.objects.filter(creator=user).delete()
+            deleted, _ = Campaign.objects.filter(
+                creator=user, slug__in=[row[0] for row in CAMPAIGNS]
+            ).delete()
             self.stdout.write(f"Removed {deleted} existing demo campaigns.")
 
         rng = random.Random(42)

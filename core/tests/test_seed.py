@@ -81,6 +81,23 @@ class SeedDemoTests(TestCase):
         self.assertEqual(mural.category, "arts")
         self.assertGreater(mural.current_amount, 0)
 
+    def test_force_spares_demo_campaigns_outside_seed_slugs(self):
+        call_command("seed_demo")
+        demo = get_user_model().objects.get(username="demo")
+        Campaign.objects.create(
+            title="Neighborhood Tool Library",
+            slug="neighborhood-tool-library",
+            description="A lending shelf for power tools.",
+            goal_amount="500.00",
+            end_date=timezone.now().date() + timedelta(days=10),
+            creator=demo,
+        )
+
+        call_command("seed_demo", "--force")
+
+        self.assertEqual(Campaign.objects.count(), 9)
+        self.assertTrue(Campaign.objects.filter(slug="neighborhood-tool-library", creator=demo).exists())
+
     def test_force_reseeds_fresh_donations(self):
         call_command("seed_demo")
         before = Donation.objects.count()
