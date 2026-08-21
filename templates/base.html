@@ -27,6 +27,7 @@
         </a>
 
         <div class="hidden md:flex items-center gap-3">
+          <a href="{% url 'campaign-list' %}" class="font-semibold text-pine-700 hover:text-pine-900">Explore</a>
           {% if user.is_authenticated %}
             <div class="group relative">
               <button
@@ -73,6 +74,7 @@
       </div>
 
       <div id="mobile-menu" class="hidden md:hidden border-t border-pine-100 bg-white px-4 py-3">
+        <a href="{% url 'campaign-list' %}" class="block py-2 font-semibold text-pine-700">Explore</a>
         {% if user.is_authenticated %}
           <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}

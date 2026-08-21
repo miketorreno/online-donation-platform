@@ -1,7 +1,8 @@
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, FormView
+from django.views.generic import CreateView, DetailView, FormView, ListView
 
 from .forms import DonateForm, StyledUserCreationForm
 from .models import Campaign
@@ -70,3 +71,34 @@ class DonateView(FormView):
         amount = form.cleaned_data["amount"]
         messages.success(self.request, f'Thank you! Your ${amount:,.2f} gift to "{self.campaign.title}" is confirmed.')
         return redirect("campaign-detail", slug=self.campaign.slug)
+
+
+SORTS = {"newest": "-created_at", "funded": "-current_amount", "closing": "end_date"}
+
+
+class CampaignListView(ListView):
+    model = Campaign
+    paginate_by = 9
+    context_object_name = "campaigns"
+    template_name = "core/home.html"
+
+    def get_queryset(self):
+        qs = Campaign.objects.filter(is_active=True)
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+        category = self.request.GET.get("category", "")
+        if category in Campaign.Category.values:
+            qs = qs.filter(category=category)
+        sort = self.request.GET.get("sort", "newest")
+        return qs.order_by(SORTS.get(sort, SORTS["newest"]))
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(
+            q=self.request.GET.get("q", ""),
+            active_category=self.request.GET.get("category", ""),
+            active_sort=self.request.GET.get("sort", "newest"),
+            categories=Campaign.Category.choices,
+        )
+        return ctx

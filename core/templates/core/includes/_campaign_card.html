@@ -1,0 +1,34 @@
+{% load odp_extras %}
+<a
+  data-campaign-card
+  href="{% url 'campaign-detail' campaign.slug %}"
+  class="card group flex flex-col overflow-hidden transition hover:-translate-y-0.5"
+>
+  <div class="relative h-36 w-full" style="{% cover_art campaign %}">
+    <span class="chip absolute left-3 top-3 bg-white/90 text-pine-700">{{ campaign.get_category_display }}</span>
+    {% if campaign.days_remaining == 0 %}
+      <span class="chip absolute right-3 top-3 bg-rose-500/90 text-white">Ended</span>
+    {% endif %}
+  </div>
+  <div class="flex flex-1 flex-col p-5">
+    <h3 class="font-display font-semibold leading-snug tracking-tight line-clamp-2">{{ campaign.title }}</h3>
+
+    <div class="progress-rail mt-4" role="progressbar" aria-valuenow="{{ campaign.percentage_raised }}" aria-valuemin="0" aria-valuemax="100" aria-label="Percentage of goal raised">
+      <div class="progress-fill" style="width: {{ campaign.percentage_raised }}%"></div>
+    </div>
+
+    <p class="mt-2 text-sm">
+      <span class="font-semibold tabular-nums">{{ campaign.current_amount|usd }}</span>
+      raised <span class="text-ink/60">of {{ campaign.goal_amount|usd }}</span>
+    </p>
+
+    <p class="mt-auto pt-4 text-sm text-ink/60">
+      {% if campaign.days_remaining > 0 %}
+        {{ campaign.days_remaining }} day{{ campaign.days_remaining|pluralize }} left
+      {% else %}
+        Ended
+      {% endif %}
+      &middot; {{ campaign.donations.count }} supporter{{ campaign.donations.count|pluralize }}
+    </p>
+  </div>
+</a>

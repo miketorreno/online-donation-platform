@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Explore campaigns — ODP{% endblock %}
+
+{% block content %}
+  <section class="border-b border-pine-100 bg-pine-50">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
+      <h1 class="max-w-xl font-display text-4xl font-extrabold tracking-tight md:text-5xl">
+        Fund what matters.
+      </h1>
+      <p class="mt-3 max-w-prose text-lg text-ink/70">Back community projects changing their neighborhoods.</p>
+      <form method="get" action="" role="search" class="mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
+        {% if active_category %}
+          <input type="hidden" name="category" value="{{ active_category }}" />
+        {% endif %}
+        {% if active_sort != "newest" %}
+          <input type="hidden" name="sort" value="{{ active_sort }}" />
+        {% endif %}
+        <label for="home-search" class="sr-only">Search campaigns</label>
+        <input
+          id="home-search"
+          type="search"
+          name="q"
+          value="{{ q }}"
+          placeholder="Search campaigns&hellip;"
+          class="field-input flex-1"
+        />
+        <button type="submit" class="btn-primary shrink-0">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+      <nav aria-label="Filter by category" class="flex flex-wrap items-center gap-2">
+        <a
+          href="{% querystring category=None %}"
+          class="{% if not active_category %}bg-pine-700 text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
+        >All</a>
+        {% for value, label in categories %}
+          <a
+            href="{% querystring category=value %}"
+            class="{% if active_category == value %}bg-pine-700 text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
+          >{{ label }}</a>
+        {% endfor %}
+      </nav>
+
+      <form method="get" action="">
+        {% if q %}
+          <input type="hidden" name="q" value="{{ q }}" />
+        {% endif %}
+        {% if active_category %}
+          <input type="hidden" name="category" value="{{ active_category }}" />
+        {% endif %}
+        <label for="sort" class="sr-only">Sort campaigns</label>
+        <select
+          id="sort"
+          name="sort"
+          onchange="this.form.submit()"
+          class="rounded-xl border border-pine-100 bg-white px-4 py-2.5 font-semibold text-pine-700 focus:border-pine-500 focus:outline-none focus:ring-2 focus:ring-pine-500/30"
+        >
+          <option value="newest" {% if active_sort == "newest" %}selected{% endif %}>Newest</option>
+          <option value="funded" {% if active_sort == "funded" %}selected{% endif %}>Most funded</option>
+          <option value="closing" {% if active_sort == "closing" %}selected{% endif %}>Closing soon</option>
+        </select>
+        <noscript>
+          <button type="submit" class="btn-ghost ml-2">Sort</button>
+        </noscript>
+      </form>
+    </div>
+
+    {% if campaigns %}
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for campaign in campaigns %}
+          {% include "core/includes/_campaign_card.html" with campaign=campaign %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card mt-8 p-10 text-center">
+        <p class="font-display text-xl font-bold tracking-tight">Nothing here yet</p>
+        <p class="mx-auto mt-2 max-w-sm text-ink/60">
+          No campaigns match your search. Try different keywords or clear filters.
+        </p>
+        <a href="/" class="btn-ghost mx-auto mt-5">Clear filters</a>
+      </div>
+    {% endif %}
+
+    {% if page_obj %}
+      {% include "core/includes/_pagination.html" %}
+    {% endif %}
+  </div>
+{% endblock %}
