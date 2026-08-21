@@ -35,6 +35,15 @@ class CampaignSlugTests(TestCase):
         self.assertEqual(c1.slug, "clean-water-wells")
         self.assertEqual(c2.slug, "clean-water-wells-2")
 
+    def test_slug_collision_on_max_length_title_stays_within_max_length(self):
+        long_title = "a" * 200
+        c1 = make_campaign(title=long_title)
+        c2 = make_campaign(title=long_title, creator=make_user(username="other"))
+        slugs = {c1.slug, c2.slug}
+        self.assertEqual(len(slugs), 2)
+        for slug in slugs:
+            self.assertLessEqual(len(slug), Campaign._meta.get_field("slug").max_length)
+
     def test_explicit_slug_preserved(self):
         c = make_campaign()
         c.slug = "custom"

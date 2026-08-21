@@ -87,11 +87,13 @@ class Campaign(models.Model):
         super().save(*args, **kwargs)
 
     def _generate_unique_slug(self):
-        base = slugify(self.title)[:200] or "campaign"
-        slug = base
+        max_length = self._meta.get_field("slug").max_length
+        base = slugify(self.title) or "campaign"
+        slug = base[:max_length]
         index = 2
         while Campaign.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-            slug = f"{base}-{index}"
+            suffix = f"-{index}"
+            slug = base[: max_length - len(suffix)] + suffix
             index += 1
         return slug
 
