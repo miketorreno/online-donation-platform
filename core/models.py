@@ -2,7 +2,9 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings  # Recommended for referencing the User model
 from django.core.validators import MinValueValidator
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class Campaign(models.Model):
@@ -12,6 +14,12 @@ class Campaign(models.Model):
 
     title = models.CharField(
         max_length=200, help_text="The title of the fundraising campaign."
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=200,
+        blank=True,
+        help_text="URL-friendly identifier, auto-generated from the title if left blank.",
     )
     description = models.TextField(
         help_text="A detailed description of the campaign's purpose."
@@ -42,6 +50,23 @@ class Campaign(models.Model):
         help_text="The user who created this campaign.",
     )
 
+    class Category(models.TextChoices):
+        EMERGENCY = "emergency", "Emergency"
+        MEDICAL = "medical", "Medical"
+        EDUCATION = "education", "Education"
+        ANIMALS = "animals", "Animals"
+        ENVIRONMENT = "environment", "Environment"
+        COMMUNITY = "community", "Community"
+        SPORTS = "sports", "Sports"
+        ARTS = "arts", "Arts"
+
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        default=Category.COMMUNITY,
+        help_text="The cause category this campaign belongs to.",
+    )
+
     class Meta:
         ordering = ["-created_at"]  # Show newest campaigns first by default
         verbose_name = "Campaign"
@@ -52,6 +77,23 @@ class Campaign(models.Model):
         String representation of the Campaign model, used in the Django admin.
         """
         return self.title
+
+    def get_absolute_url(self):
+        return reverse("campaign-detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._generate_unique_slug()
+        super().save(*args, **kwargs)
+
+    def _generate_unique_slug(self):
+        base = slugify(self.title)[:200] or "campaign"
+        slug = base
+        index = 2
+        while Campaign.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            slug = f"{base}-{index}"
+            index += 1
+        return slug
 
     # === Helper Properties ===
     @property
@@ -85,6 +127,10 @@ class Donation(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("1.00"))],  # Enforce a minimum donation
         help_text="The amount of the donation.",
+    )
+    message = models.TextField(
+        blank=True,
+        help_text="An optional message from the donor.",
     )
     # This ID comes from the payment processor (e.g., Stripe's charge ID)
     # It's crucial for tracking and refunds.
