@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load odp_extras %}
+
+{% block title %}Give now — {{ campaign.title }} — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div class="grid items-start gap-8 lg:grid-cols-2">
+      <section class="card overflow-hidden">
+        <div class="h-32 md:h-40" style="{% cover_art campaign %}"></div>
+        <div class="p-6">
+          <h2 class="font-display text-2xl font-bold tracking-tight">{{ campaign.title }}</h2>
+          <div class="mt-4 flex items-baseline justify-between gap-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-ink/60">Raised</p>
+              <p class="font-display text-2xl font-extrabold tabular-nums">{{ campaign.current_amount|usd }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-bold uppercase tracking-wide text-ink/60">Goal</p>
+              <p class="font-semibold tabular-nums">{{ campaign.goal_amount|usd }}</p>
+            </div>
+          </div>
+          <div class="progress-rail mt-4">
+            <div class="progress-fill" style="width: {{ campaign.percentage_raised }}%"></div>
+          </div>
+          <a href="{% url 'campaign-detail' campaign.slug %}" class="mt-4 inline-block text-sm font-semibold text-pine-700 hover:text-pine-900">Back to campaign</a>
+        </div>
+      </section>
+
+      <section class="card p-6 md:p-8">
+        <h1 class="font-display text-3xl font-extrabold tracking-tight">Give now</h1>
+        <p class="mt-1 text-sm text-ink/60">Your gift goes straight to this campaign's total.</p>
+
+        {% if form.non_field_errors %}
+          <div class="mt-4">
+            {% for error in form.non_field_errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" class="mt-6 space-y-5">
+          {% csrf_token %}
+
+          <div>
+            <label class="field-label" for="{{ form.amount.id_for_label }}">{{ form.amount.label }}</label>
+            <div class="mb-2 flex flex-wrap gap-2" role="group" aria-label="Preset amounts">
+              <button type="button" data-preset="10" class="btn-ghost !px-4 !py-1.5">$10</button>
+              <button type="button" data-preset="25" class="btn-ghost !px-4 !py-1.5">$25</button>
+              <button type="button" data-preset="50" class="btn-ghost !px-4 !py-1.5">$50</button>
+              <button type="button" data-preset="100" class="btn-ghost !px-4 !py-1.5">$100</button>
+            </div>
+            {{ form.amount }}
+            {% for error in form.amount.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div>
+            <label class="field-label" for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
+            {{ form.message }}
+            {% for error in form.message.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <button type="submit" class="btn-primary w-full">Complete gift</button>
+          <p class="text-center text-xs text-ink/60">Demo checkout — no real payment is processed.</p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll("[data-preset]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var input = document.getElementById("id_amount");
+        if (input) {
+          input.value = btn.dataset.preset;
+        }
+      });
+    });
+  </script>
+{% endblock %}

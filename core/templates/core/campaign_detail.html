@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load odp_extras %}
+
+{% block title %}{{ campaign.title }} — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <article>
+        {% include "core/includes/_cover_banner.html" %}
+
+        <div class="relative -mt-10 ml-4 md:ml-8 inline-block">
+          <span class="font-display text-7xl md:text-8xl font-extrabold tracking-tight text-pine-700 tabular-nums">
+            {{ campaign.percentage_raised }}<span class="text-4xl md:text-5xl align-top">%</span>
+          </span>
+          <div class="h-1.5 w-24 rounded-full bg-gradient-to-r from-marigold-400 to-marigold-500"></div>
+        </div>
+
+        <h1 class="mt-4 font-display text-3xl font-extrabold tracking-tight md:text-4xl">{{ campaign.title }}</h1>
+        <p class="mt-2 text-sm text-ink/60">
+          By {{ campaign.creator.username }} · Started {{ campaign.created_at|date:"M j, Y" }}
+        </p>
+        <p class="mt-6 max-w-prose leading-relaxed whitespace-pre-line text-ink/80">{{ campaign.description }}</p>
+
+        {% include "core/includes/_supporters.html" %}
+      </article>
+
+      <aside class="lg:sticky lg:top-24">
+        <div class="card p-6">
+          <div class="flex items-baseline justify-between gap-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-ink/60">Raised</p>
+              <p class="font-display text-3xl font-extrabold tabular-nums">{{ campaign.current_amount|usd }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-bold uppercase tracking-wide text-ink/60">Goal</p>
+              <p class="font-semibold tabular-nums">{{ campaign.goal_amount|usd }}</p>
+            </div>
+          </div>
+
+          <div class="progress-rail mt-4" role="progressbar" aria-valuenow="{{ campaign.percentage_raised }}" aria-valuemin="0" aria-valuemax="100" aria-label="Percentage of goal raised">
+            <div class="progress-fill" style="width: {{ campaign.percentage_raised }}%"></div>
+          </div>
+
+          <dl class="mt-5 grid grid-cols-2 gap-3 text-sm">
+            <div class="rounded-xl bg-pine-50 p-3">
+              <dt class="text-xs font-bold uppercase tracking-wide text-ink/60">Days left</dt>
+              <dd class="mt-0.5 font-bold tabular-nums">{{ campaign.days_remaining }}</dd>
+            </div>
+            <div class="rounded-xl bg-pine-50 p-3">
+              <dt class="text-xs font-bold uppercase tracking-wide text-ink/60">Supporters</dt>
+              <dd class="mt-0.5 font-bold tabular-nums">{{ supporter_count }}</dd>
+            </div>
+          </dl>
+
+          {% if can_receive %}
+            <a href="{% url 'campaign-donate' campaign.slug %}" class="btn-primary mt-6 w-full">Give now</a>
+          {% else %}
+            <p class="mt-6 text-center">
+              <span class="chip bg-rose-500/10 text-rose-600">This campaign has ended</span>
+            </p>
+          {% endif %}
+        </div>
+      </aside>
+    </div>
+  </div>
+{% endblock %}
