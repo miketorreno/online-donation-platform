@@ -28,6 +28,7 @@
 
         <div class="hidden md:flex items-center gap-3">
           <a href="{% url 'campaign-list' %}" class="font-semibold text-pine-700 hover:text-pine-900">Explore</a>
+          <a href="{% url 'campaign-create' %}" class="btn-primary px-5! py-2.5!">Start a campaign</a>
           {% if user.is_authenticated %}
             <div class="group relative">
               <button
@@ -42,6 +43,15 @@
                 </svg>
               </button>
               <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition absolute right-0 mt-2 w-48 rounded-2xl bg-white p-2 shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]">
+                <a
+                  href="{% url 'my-campaigns' %}"
+                  class="block rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900"
+                >My campaigns</a>
+                <a
+                  href="{% url 'my-donations' %}"
+                  class="block rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900"
+                >My donations</a>
+                <hr class="my-1 border-pine-100" />
                 <form method="post" action="{% url 'logout' %}">
                   {% csrf_token %}
                   <button

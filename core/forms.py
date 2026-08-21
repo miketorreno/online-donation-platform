@@ -3,6 +3,8 @@ from decimal import Decimal
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
+from core.models import Campaign
+
 
 class StyledAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -34,3 +36,18 @@ class DonateForm(forms.Form):
         max_length=280,
         widget=forms.Textarea(attrs={"class": "field-input", "rows": 3}),
     )
+
+
+class CampaignForm(forms.ModelForm):
+    class Meta:
+        model = Campaign
+        fields = ["title", "description", "category", "goal_amount", "end_date"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "field-input"}),
+            "description": forms.Textarea(attrs={"class": "field-input", "rows": 6}),
+            "category": forms.Select(attrs={"class": "field-input"}),
+            "goal_amount": forms.NumberInput(
+                attrs={"class": "field-input", "min": "10.00", "step": "0.01"}
+            ),
+            "end_date": forms.DateInput(attrs={"class": "field-input", "type": "date"}),
+        }
