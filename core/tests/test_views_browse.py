@@ -85,6 +85,15 @@ class CampaignListViewTests(TestCase):
         self.assertContains(resp, "Richest Rescue")
         self.assertNotContains(resp, "Clean Water Wells")
 
+    def test_category_pills_do_not_carry_stale_page_param(self):
+        resp = self.client.get(reverse("campaign-list") + "?page=2")
+        content = resp.content.decode("utf-8")
+        nav = content.split('aria-label="Filter by category"', 1)[1].split("</nav>", 1)[0]
+        hrefs = re.findall(r'href="([^"]+)"', nav)
+        self.assertTrue(hrefs)
+        for href in hrefs:
+            self.assertNotIn("page=", href, f"filter link carries stale page param: {href}")
+
     def test_unknown_category_param_ignored(self):
         resp = self.client.get(reverse("campaign-list") + "?category=nonsense")
         self.assertEqual(resp.status_code, 200)
