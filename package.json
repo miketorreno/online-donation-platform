@@ -1,0 +1,12 @@
+{
+  "name": "odp-frontend",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i core/static/src/app.css -o core/static/css/app.css --minify",
+    "watch": "tailwindcss -i core/static/src/app.css -o core/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "tailwindcss": "^4.1.13"
+  }
+}

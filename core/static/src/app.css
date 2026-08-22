@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-porcelain: oklch(98.5% 0.004 160); /* page bg */
+  --color-ink: oklch(22% 0.02 170); /* primary text */
+  --color-pine-50: oklch(96% 0.015 158);
+  --color-pine-100: oklch(93% 0.02 158);
+  --color-pine-500: oklch(52% 0.09 156);
+  --color-pine-600: oklch(45% 0.09 158);
+  --color-pine-700: oklch(38% 0.09 160); /* primary buttons */
+  --color-pine-900: oklch(28% 0.07 164);
+  --color-marigold-100: oklch(94% 0.05 85);
+  --color-marigold-300: oklch(86% 0.12 80);
+  --color-marigold-400: oklch(80% 0.15 75); /* progress fills, highlights */
+  --color-marigold-500: oklch(74% 0.16 70);
+  --color-rose-500: oklch(58% 0.19 20); /* destructive accents */
+  --color-rose-600: oklch(52% 0.19 18);
+
+  --font-display: "Bricolage Grotesque", "Public Sans", system-ui, sans-serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --animate-fill-up: fill-up 0.9s ease-out both;
+
+  @keyframes fill-up {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-porcelain text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-pine-600);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-pine-700 px-6 py-3 font-semibold text-white transition hover:bg-pine-900 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-white px-5 py-2.5 font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900;
+  }
+  .btn-danger-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-rose-500/30 bg-white px-5 py-2.5 font-semibold text-rose-600 transition hover:bg-rose-500/10;
+  }
+  .card {
+    @apply rounded-3xl bg-white shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)];
+  }
+  .field-label {
+    @apply block text-sm font-semibold mb-1.5;
+  }
+  .field-input {
+    @apply w-full rounded-xl border border-pine-100 bg-white px-4 py-3 text-ink placeholder:text-ink/35 focus:border-pine-500 focus:outline-none focus:ring-2 focus:ring-pine-500/30;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm font-medium text-rose-600;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide;
+  }
+  .progress-rail {
+    @apply h-2.5 w-full overflow-hidden rounded-full bg-pine-100;
+  }
+  .progress-fill {
+    @apply block h-full origin-left rounded-full bg-gradient-to-r from-marigold-400 to-marigold-500;
+    animation: var(--animate-fill-up);
+  }
+}
