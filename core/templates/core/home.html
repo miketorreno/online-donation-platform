@@ -81,12 +81,10 @@
         <p class="mx-auto mt-2 max-w-sm text-ink/60">
           No campaigns match your search. Try different keywords or clear filters.
         </p>
-        <a href="/" class="btn-ghost mx-auto mt-5">Clear filters</a>
+        <a href="{% url 'campaign-list' %}" class="btn-ghost mx-auto mt-5">Clear filters</a>
       </div>
     {% endif %}
 
-    {% if page_obj %}
-      {% include "core/includes/_pagination.html" %}
-    {% endif %}
+    {% include "core/includes/_pagination.html" %}
   </div>
 {% endblock %}

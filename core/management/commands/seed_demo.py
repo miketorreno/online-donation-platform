@@ -93,7 +93,7 @@ class Command(BaseCommand):
             deleted, _ = Campaign.objects.filter(
                 creator=user, slug__in=[row[0] for row in CAMPAIGNS]
             ).delete()
-            self.stdout.write(f"Removed {deleted} existing demo campaigns.")
+            self.stdout.write(f"Removed {deleted} existing seed campaigns.")
 
         rng = random.Random(42)
         today = timezone.now().date()

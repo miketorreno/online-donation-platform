@@ -21,16 +21,17 @@ def record_donation(*, campaign: Campaign, amount: Decimal, donor=None, message:
         raise DonationError("Minimum donation is $1.00.")
     if not campaign.is_active or campaign.end_date < timezone.now().date():
         raise DonationError("This campaign is not accepting donations.")
+    quantized = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     with transaction.atomic():
         donation = Donation.objects.create(
             campaign=campaign,
-            amount=amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            amount=quantized,
             donor=donor,
             message=(message or "").strip(),
             transaction_id=generate_transaction_id(),
         )
         Campaign.objects.filter(pk=campaign.pk).update(
-            current_amount=F("current_amount") + amount
+            current_amount=F("current_amount") + quantized
         )
         campaign.refresh_from_db(fields=["current_amount"])
     return donation

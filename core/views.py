@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import (
@@ -105,7 +105,9 @@ class CampaignListView(ListView):
         if category in Campaign.Category.values:
             qs = qs.filter(category=category)
         sort = self.request.GET.get("sort", "newest")
-        return qs.order_by(SORTS.get(sort, SORTS["newest"]))
+        return qs.annotate(
+            supporter_count=Count("donations", distinct=True)
+        ).order_by(SORTS.get(sort, SORTS["newest"]))
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -134,10 +136,14 @@ class CampaignUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Campaign
     form_class = CampaignForm
     template_name = "core/campaign_form.html"
-    raise_exception = True
 
     def test_func(self):
         return self.get_object().creator_id == self.request.user.id
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        raise PermissionDenied
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -149,10 +155,14 @@ class CampaignDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Campaign
     template_name = "core/campaign_confirm_delete.html"
     success_url = reverse_lazy("my-campaigns")
-    raise_exception = True
 
     def test_func(self):
         return self.get_object().creator_id == self.request.user.id
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        raise PermissionDenied
 
     def form_valid(self, form):
         messages.success(self.request, "Campaign deleted.")
@@ -199,6 +209,6 @@ class MyDonationsView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        total = self.get_queryset().aggregate(total=Sum("amount"))["total"]
+        total = self.object_list.aggregate(total=Sum("amount"))["total"]
         ctx["total_given"] = total or Decimal("0.00")
         return ctx

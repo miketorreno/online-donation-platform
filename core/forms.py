@@ -51,3 +51,10 @@ class CampaignForm(forms.ModelForm):
             ),
             "end_date": forms.DateInput(attrs={"class": "field-input", "type": "date"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.setdefault(
+                "aria-describedby", f"id_{name}-help id_{name}-error"
+            )

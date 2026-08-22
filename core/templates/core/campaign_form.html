@@ -26,11 +26,15 @@
           <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
           {{ field }}
           {% if field.help_text %}
-            <p class="mt-1 text-xs text-ink/60">{{ field.help_text }}</p>
+            <p id="{{ field.id_for_label }}-help" class="mt-1 text-xs text-ink/60">{{ field.help_text }}</p>
           {% endif %}
-          {% for error in field.errors %}
-            <p class="field-error">{{ error }}</p>
-          {% endfor %}
+          {% if field.errors %}
+            <ul id="{{ field.id_for_label }}-error" class="list-none p-0" role="alert">
+              {% for error in field.errors %}
+                <li class="field-error">{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         </div>
       {% endfor %}
 

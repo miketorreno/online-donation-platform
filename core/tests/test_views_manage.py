@@ -76,6 +76,10 @@ class CampaignUpdateViewTests(TestCase):
         resp = self.client.post(self.edit_url, EDITED_DATA, follow=True)
         self.assertContains(resp, "Campaign updated.")
 
+    def test_anonymous_get_edit_redirects_to_login(self):
+        resp = self.client.get(self.edit_url)
+        self.assertRedirects(resp, f"/accounts/login/?next={self.edit_url}")
+
     def test_edit_by_other_user_is_403(self):
         self.client.force_login(self.bob)
         self.assertEqual(self.client.get(self.edit_url).status_code, 403)
@@ -115,6 +119,10 @@ class CampaignDeleteViewTests(TestCase):
         self.client.force_login(self.alice)
         resp = self.client.post(self.delete_url, follow=True)
         self.assertContains(resp, "Campaign deleted.")
+
+    def test_anonymous_get_delete_redirects_to_login(self):
+        resp = self.client.get(self.delete_url)
+        self.assertRedirects(resp, f"/accounts/login/?next={self.delete_url}")
 
     def test_delete_by_other_user_is_403(self):
         self.client.force_login(self.bob)

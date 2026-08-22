@@ -51,6 +51,18 @@ class RecordDonationTests(TestCase):
         with self.assertRaises(DonationError):
             record_donation(campaign=self.campaign, amount=Decimal("10.00"))
 
+    def test_sub_cent_amount_is_quantized_in_stored_amount_and_total(self):
+        d = record_donation(campaign=self.campaign, amount=Decimal("25.555"))
+        self.assertEqual(d.amount, Decimal("25.56"))
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.current_amount, Decimal("25.56"))
+
+    def test_sub_cent_donations_accumulate_without_drift(self):
+        record_donation(campaign=self.campaign, amount=Decimal("1.005"))
+        record_donation(campaign=self.campaign, amount=Decimal("1.005"))
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.current_amount, Decimal("2.02"))
+
     def test_transaction_ids_unique(self):
         a = record_donation(campaign=self.campaign, amount=Decimal("5.00"))
         b = record_donation(campaign=self.campaign, amount=Decimal("5.00"))
