@@ -1,14 +1,16 @@
-# Online Donation Platform (ODP)
+# Online Donation Platform
 
 A Django web application for community fundraising: anyone can browse campaigns, give to them through a simulated checkout, and launch campaigns of their own with live progress tracking.
 
 ## Tech Stack
 
-- Python 3.12
-- Django 6.1
-- Tailwind CSS v4 (CLI build, no PostCSS config needed)
-- SQLite for local development (MySQL-ready via settings)
-- python-decouple for environment configuration
+- Python
+- Django
+- Tailwind CSS v4
+- SQLite
+- python-decouple
+- gunicorn
+- uv
 
 ## Getting Started
 
@@ -81,19 +83,19 @@ Demo credentials: username `demo`, password `demo-pass-1234`.
 
 ## URL Map
 
-| Path | Name | Purpose |
-| --- | --- | --- |
-| `/` | `campaign-list` | Browse/search campaigns |
-| `/signup/` | `signup` | Create an account |
-| `/my/campaigns/` | `my-campaigns` | Your campaigns dashboard |
-| `/my/donations/` | `my-donations` | Your donations history |
-| `/campaigns/new/` | `campaign-create` | Start a campaign |
-| `/campaigns/<slug>/edit/` | `campaign-edit` | Edit your campaign |
-| `/campaigns/<slug>/delete/` | `campaign-delete` | Delete confirmation |
-| `/campaigns/<slug>/toggle-active/` | `campaign-toggle-active` | Pause/resume (POST) |
-| `/campaigns/<slug>/donate/` | `campaign-donate` | Donation form |
-| `/campaigns/<slug>/` | `campaign-detail` | Campaign page |
-| `/accounts/login/` etc. | Django auth URLs | Login/logout/password |
+| Path                               | Name                     | Purpose                  |
+| ---------------------------------- | ------------------------ | ------------------------ |
+| `/`                                | `campaign-list`          | Browse/search campaigns  |
+| `/signup/`                         | `signup`                 | Create an account        |
+| `/my/campaigns/`                   | `my-campaigns`           | Your campaigns dashboard |
+| `/my/donations/`                   | `my-donations`           | Your donations history   |
+| `/campaigns/new/`                  | `campaign-create`        | Start a campaign         |
+| `/campaigns/<slug>/edit/`          | `campaign-edit`          | Edit your campaign       |
+| `/campaigns/<slug>/delete/`        | `campaign-delete`        | Delete confirmation      |
+| `/campaigns/<slug>/toggle-active/` | `campaign-toggle-active` | Pause/resume (POST)      |
+| `/campaigns/<slug>/donate/`        | `campaign-donate`        | Donation form            |
+| `/campaigns/<slug>/`               | `campaign-detail`        | Campaign page            |
+| `/accounts/login/` etc.            | Django auth URLs         | Login/logout/password    |
 
 ## Project Structure
 

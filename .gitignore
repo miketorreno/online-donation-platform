@@ -208,4 +208,5 @@ __marimo__/
 
 node_modules/
 
-todo.md
+.agents/
+.claude/
