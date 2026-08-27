@@ -1,0 +1,30 @@
+[project]
+name = "online-donation-platform"
+version = "0.1.0"
+description = "A Django-based online donation platform"
+readme = "README.md"
+authors = [
+    { name = "Mike" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "django==6.1",
+    "gunicorn==26.2.0",
+    "psycopg>=3.3.4",
+    "psycopg-binary==3.3.4",
+    "whitenoise==6.9.0",
+    "python-decouple==3.8",
+]
+
+[project.scripts]
+online-donation-platform = "online_donation_platform:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "django-debug-toolbar==7.1.1",
+    "pipdeptree==4.2.1",
+]

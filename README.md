@@ -1,14 +1,17 @@
-# Online Donation Platform (ODP)
+# Online Donation Platform
 
 A Django web application for community fundraising: anyone can browse campaigns, give to them through a simulated checkout, and launch campaigns of their own with live progress tracking.
 
 ## Tech Stack
 
-- Python 3.12
+- Python 3.12+
 - Django 6.1
-- Tailwind CSS v4 (CLI build, no PostCSS config needed)
-- SQLite for local development (MySQL-ready via settings)
-- python-decouple for environment configuration
+- Tailwind CSS v4
+- PostgreSQL (production) / SQLite (local dev)
+- python-decouple
+- Gunicorn + WhiteNoise
+- Docker + Docker Compose
+- uv (package manager)
 
 ## Getting Started
 
@@ -68,6 +71,39 @@ A Django web application for community fundraising: anyone can browse campaigns,
 
 Open http://127.0.0.1:8000/ in your browser.
 
+### Docker
+
+1. Copy the environment file and set your values:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   At minimum, set `SECRET_KEY` to a random string. The defaults work with the Compose PostgreSQL service.
+
+2. Build and start:
+
+   ```bash
+   docker compose up --build
+   ```
+
+   On first start the entrypoint runs migrations, collects static files, and starts Gunicorn. The app is available at http://localhost:8000/.
+
+3. Seed demo data (optional):
+
+   ```bash
+   docker compose exec web python manage.py seed_demo
+   ```
+
+   Demo credentials: `demo` / `demo-pass-1234`.
+
+4. Stop:
+
+   ```bash
+   docker compose down         # stop containers
+   docker compose down -v      # stop and wipe database volume
+   ```
+
 ## Feature Tour
 
 - **Explore** (`/`) — active campaigns in a responsive card grid with full-text search, category filters, sorting (newest / most funded / closing soon), and pagination.
@@ -81,19 +117,19 @@ Demo credentials: username `demo`, password `demo-pass-1234`.
 
 ## URL Map
 
-| Path | Name | Purpose |
-| --- | --- | --- |
-| `/` | `campaign-list` | Browse/search campaigns |
-| `/signup/` | `signup` | Create an account |
-| `/my/campaigns/` | `my-campaigns` | Your campaigns dashboard |
-| `/my/donations/` | `my-donations` | Your donations history |
-| `/campaigns/new/` | `campaign-create` | Start a campaign |
-| `/campaigns/<slug>/edit/` | `campaign-edit` | Edit your campaign |
-| `/campaigns/<slug>/delete/` | `campaign-delete` | Delete confirmation |
-| `/campaigns/<slug>/toggle-active/` | `campaign-toggle-active` | Pause/resume (POST) |
-| `/campaigns/<slug>/donate/` | `campaign-donate` | Donation form |
-| `/campaigns/<slug>/` | `campaign-detail` | Campaign page |
-| `/accounts/login/` etc. | Django auth URLs | Login/logout/password |
+| Path                               | Name                     | Purpose                  |
+| ---------------------------------- | ------------------------ | ------------------------ |
+| `/`                                | `campaign-list`          | Browse/search campaigns  |
+| `/signup/`                         | `signup`                 | Create an account        |
+| `/my/campaigns/`                   | `my-campaigns`           | Your campaigns dashboard |
+| `/my/donations/`                   | `my-donations`           | Your donations history   |
+| `/campaigns/new/`                  | `campaign-create`        | Start a campaign         |
+| `/campaigns/<slug>/edit/`          | `campaign-edit`          | Edit your campaign       |
+| `/campaigns/<slug>/delete/`        | `campaign-delete`        | Delete confirmation      |
+| `/campaigns/<slug>/toggle-active/` | `campaign-toggle-active` | Pause/resume (POST)      |
+| `/campaigns/<slug>/donate/`        | `campaign-donate`        | Donation form            |
+| `/campaigns/<slug>/`               | `campaign-detail`        | Campaign page            |
+| `/accounts/login/` etc.            | Django auth URLs         | Login/logout/password    |
 
 ## Project Structure
 
