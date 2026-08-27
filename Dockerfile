@@ -43,7 +43,7 @@ ENV WEB_PORT=8000
 EXPOSE ${WEB_PORT}
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${WEB_PORT}/')" || exit 1
+  CMD ["python", "-c", "import os, urllib.request; p=os.environ.get('WEB_PORT','8000').strip('\\\"'); urllib.request.urlopen(f'http://localhost:{p}/')"]
 
 ENTRYPOINT ["python", "entrypoint.py"]
 CMD ["gunicorn", "odp.wsgi:application", "--bind", "0.0.0.0:8000"]
