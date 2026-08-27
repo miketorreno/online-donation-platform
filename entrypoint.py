@@ -48,7 +48,21 @@ def main():
 
         print("Starting server...")
         bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
-        os.execvp("gunicorn", ["gunicorn", "odp.wsgi:application", "--bind", bind])
+        workers = os.environ.get("GUNICORN_WORKERS", "3")
+        timeout = os.environ.get("GUNICORN_TIMEOUT", "120")
+        os.execvp(
+            "gunicorn",
+            [
+                "gunicorn",
+                "odp.wsgi:application",
+                "--bind",
+                bind,
+                "--workers",
+                workers,
+                "--timeout",
+                timeout,
+            ],
+        )
 
     except subprocess.CalledProcessError as e:
         print(f"ERROR: Command failed with exit code {e.returncode}: {e.cmd}")
