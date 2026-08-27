@@ -4,13 +4,14 @@ A Django web application for community fundraising: anyone can browse campaigns,
 
 ## Tech Stack
 
-- Python
-- Django
+- Python 3.12+
+- Django 6.1
 - Tailwind CSS v4
-- SQLite
+- PostgreSQL (production) / SQLite (local dev)
 - python-decouple
-- gunicorn
-- uv
+- Gunicorn + WhiteNoise
+- Docker + Docker Compose
+- uv (package manager)
 
 ## Getting Started
 
@@ -69,6 +70,39 @@ A Django web application for community fundraising: anyone can browse campaigns,
    ```
 
 Open http://127.0.0.1:8000/ in your browser.
+
+### Docker
+
+1. Copy the environment file and set your values:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   At minimum, set `SECRET_KEY` to a random string. The defaults work with the Compose PostgreSQL service.
+
+2. Build and start:
+
+   ```bash
+   docker compose up --build
+   ```
+
+   On first start the entrypoint runs migrations, collects static files, and starts Gunicorn. The app is available at http://localhost:8000/.
+
+3. Seed demo data (optional):
+
+   ```bash
+   docker compose exec web python manage.py seed_demo
+   ```
+
+   Demo credentials: `demo` / `demo-pass-1234`.
+
+4. Stop:
+
+   ```bash
+   docker compose down         # stop containers
+   docker compose down -v      # stop and wipe database volume
+   ```
 
 ## Feature Tour
 

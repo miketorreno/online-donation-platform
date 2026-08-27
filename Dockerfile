@@ -17,9 +17,9 @@ WORKDIR /app
 # Install dependencies into a virtual environment using cache and bind mounts
 # so neither uv nor the lock files need to be copied into the image.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --frozen --no-install-project
 
 # Runtime stage: minimal DHI image with no shell or package manager,
 # already runs as the nonroot user.
@@ -36,7 +36,14 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY . .
 
-EXPOSE 8000
+# Server configuration (override via .env)
+ENV GUNICORN_BIND=0.0.0.0:8000
+ENV WEB_PORT=8000
+
+EXPOSE ${WEB_PORT}
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${WEB_PORT}/')" || exit 1
 
 ENTRYPOINT ["python", "entrypoint.py"]
 CMD ["gunicorn", "odp.wsgi:application", "--bind", "0.0.0.0:8000"]
