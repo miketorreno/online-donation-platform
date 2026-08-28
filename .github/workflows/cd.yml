@@ -1,0 +1,118 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: online-donation-platform
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 30
+    env:
+      VERSION_TAG: ${{ needs.build-and-push.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Connect to Tailscale Network
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: VERSION_TAG,IMAGE_NAME
+          script: |
+            set -euo pipefail
+            cd /home/srvr/online-donation-platform
+
+            # Read DB credentials from the host .env (never from GitHub expressions)
+            DB_USER=$(grep -E '^DB_USER=' .env | head -1 | cut -d= -f2 | tr -d '"')
+            DB_NAME=$(grep -E '^DB_NAME=' .env | head -1 | cut -d= -f2 | tr -d '"')
+            echo "Using DB: user=${DB_USER} db=${DB_NAME}"
+
+            # Pin the exact release image
+            VERSION=${VERSION_TAG}
+            if grep -q '^COMMIT_SHA=' .env; then
+              sed -i "s/^COMMIT_SHA=.*/COMMIT_SHA=${VERSION}/" .env
+            else
+              echo "COMMIT_SHA=${VERSION}" >> .env
+            fi
+
+            # Database backup
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            mkdir -p ~/backups/odp_db_backups
+            docker compose exec -T db pg_dump -U "$DB_USER" "$DB_NAME" > ~/backups/odp_db_backups/backup_${TIMESTAMP}.sql
+            echo "Backup saved to ~/backups/odp_db_backups/backup_${TIMESTAMP}.sql"
+
+            # Recreate web container from the tag-pinned image
+            docker compose pull web
+            docker compose up -d --no-deps web
+
+            # Django lifecycle
+            docker compose exec -T web python manage.py migrate --noinput
+            docker compose exec -T web python manage.py collectstatic --noinput
+
+            # Prune stale images
+            docker image prune -f
