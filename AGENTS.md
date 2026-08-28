@@ -4,9 +4,9 @@ Django project ("Online Donation Platform"). Single app (`core`), config package
 
 ## Environment
 
-- There is no `requirements.txt`. Dependencies are just `django` and `python-decouple`. A `venv/` exists (Python 3.12, Django 6.1) — prefer running everything as `venv/bin/python manage.py ...`.
+- Dependencies are managed with **uv** (`uv.lock`). A `.venv/` exists (Python 3.12, Django 6.1) — prefer running everything as `uv run python manage.py ...`.
 - A root `.env` is **required**: `SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` are read via python-decouple with no defaults, so any `manage.py` command fails with `UndefinedValueError` if missing. Copy from `.env.example` and fill in values.
-- Default `DB_ENGINE` in `odp/settings.py:82` is **MySQL** (port 3306). For local dev and tests set `DB_ENGINE=django.db.backends.sqlite3` in `.env`. The `"sqlite"` entry in `DATABASES` is only an alias — the `default` connection is what `migrate`/`test` actually use.
+- DB is **PostgreSQL** (default `DB_ENGINE` in `odp/settings.py:82` is `django.db.backends.postgresql`, port 5432). For local dev and tests set `DB_ENGINE=django.db.backends.sqlite3` in `.env` (SQLite ignores `DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`, but all four must be non-empty — `DB_PORT` is cast to int and an empty string crashes settings import). The `"default"` connection is what `migrate`/`test` actually use.
 - Styling is Tailwind CSS v4 via the CLI (`@tailwindcss/cli`). Source of truth: `core/static/src/app.css` (theme tokens + component classes). Compiled output `core/static/css/app.css` is committed but generated — edit the source, then rebuild.
 
 ## Commands
@@ -23,7 +23,7 @@ venv/bin/python manage.py runserver      # http://127.0.0.1:8000/
 venv/bin/python manage.py seed_demo [--force]  # demo user + 8 campaigns; --force deletes existing seed-slug campaigns first
 ```
 
-No CI, lint, formatter config, or pre-commit hooks exist. Tests live in the `core/tests/` package, split per area (`test_models`, `test_services`, `test_views_*`, `test_seed`, `test_templatetags`, ...); shared factories (`make_user`, `make_campaign`) are in `core/tests/test_models.py`.
+Tests live in the `core/tests/` package, split per area (`test_models`, `test_services`, `test_views_*`, `test_seed`, `test_templatetags`, ...); shared factories (`make_user`, `make_campaign`) are in `core/tests/test_models.py`. CI (`ci.yml`) runs tests against SQLite with `DEBUG=True` and non-empty DB env vars; the production security posture is validated there via `manage.py check --deploy`.
 
 ## Architecture
 

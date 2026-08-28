@@ -17,11 +17,51 @@ services:
   web:
     image: miketorreno/online-donation-platform:${COMMIT_SHA:-latest}
     restart: unless-stopped
+    # Bind to the loopback interface only: the host Nginx reverse proxy
+    # forwards requests here, so the app is never exposed publicly directly.
     ports:
-      - "${WEB_PORT:-8000}:${WEB_PORT:-8000}"
+      - "127.0.0.1:${WEB_PORT:-8000}:${WEB_PORT:-8000}"
     env_file:
       - .env
     depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Host bind-mounts shared with the host-level Nginx reverse proxy so it
+      # can serve static files and user-uploaded media directly.
+      - ${HOST_STATIC_DIR:-./staticfiles}:/app/staticfiles
+      - ${HOST_MEDIA_DIR:-./media}:/app/media
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: miketorreno/online-donation-platform:${COMMIT_SHA:-latest}
+    restart: unless-stopped
+    command: ["celery", "-A", "odp", "worker", "--loglevel=info"]
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  beat:
+    image: miketorreno/online-donation-platform:${COMMIT_SHA:-latest}
+    restart: unless-stopped
+    command: ["celery", "-A", "odp", "beat", "--loglevel=info"]
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
       db:
         condition: service_healthy
 

@@ -138,6 +138,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media (user uploads: cover images, avatars, update photos)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -146,6 +150,37 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Auth Redirects
 LOGIN_REDIRECT_URL = "/"  # Redirect to homepage after login
 LOGOUT_REDIRECT_URL = "/"  # Redirect to homepage after logout
+
+# Celery
+CELERY_BROKER_URL = config(
+    "CELERY_BROKER_URL", default="redis://localhost:6379/0"
+)
+CELERY_RESULT_BACKEND = config(
+    "CELERY_RESULT_BACKEND", default="redis://localhost:6379/0"
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
+
+# Periodic (Beat) schedule — future Phase 4 tasks (campaign lifecycle email
+# triggers) are declared here as a code-defined schedule. Run the scheduler
+# with: celery -A odp beat --loglevel=info
+
+# Email (dev/tests default to a file backend; override EMAIL_BACKEND in prod)
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.filebased.EmailBackend",
+)
+EMAIL_FILE_PATH = BASE_DIR / "emails"
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@localhost")
 
 # Production security settings (only when DEBUG is off)
 if not DEBUG:

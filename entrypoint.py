@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-"""Docker entrypoint: wait for DB, run migrations + collectstatic, then exec CMD."""
+"""Docker entrypoint: wait for DB, run migrations + collectstatic, then exec CMD.
+
+The first CLI argument selects the command mode:
+  * "celery"            -> wait for DB, then run the given celery command
+                           (worker/beat). No collectstatic/seed here.
+  * (anything else)     -> web server startup: migrate + collectstatic +
+                           optional seed, then gunicorn (default).
+"""
 import os
 import socket
 import subprocess
@@ -30,40 +37,56 @@ def wait_for_db(max_retries=30, delay=2):
             time.sleep(delay)
 
 
+def run_celery(args):
+    """Wait for DB then exec the celery command (worker/beat)."""
+    wait_for_db()
+    os.execvp("celery", ["celery"] + args)
+
+
+def run_web():
+    """Standard web startup: migrate, collectstatic, optional seed, gunicorn."""
+    # Ensure writable media/static dirs exist (may be bind-mounted from host).
+    os.makedirs("media", exist_ok=True)
+    os.makedirs("staticfiles", exist_ok=True)
+
+    print("Running migrations...")
+    subprocess.check_call([sys.executable, "manage.py", "migrate", "--noinput"])
+
+    print("Collecting static files...")
+    subprocess.check_call(
+        [sys.executable, "manage.py", "collectstatic", "--noinput"]
+    )
+
+    if os.environ.get("SEED", "").lower() in ("1", "true"):
+        print("Seeding demo data...")
+        subprocess.check_call([sys.executable, "manage.py", "seed_demo"])
+
+    print("Starting server...")
+    bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
+    workers = os.environ.get("GUNICORN_WORKERS", "3")
+    timeout = os.environ.get("GUNICORN_TIMEOUT", "120")
+    os.execvp(
+        "gunicorn",
+        [
+            "gunicorn",
+            "odp.wsgi:application",
+            "--bind",
+            bind,
+            "--workers",
+            workers,
+            "--timeout",
+            timeout,
+        ],
+    )
+
+
 def main():
     try:
-        wait_for_db()
-
-        print("Running migrations...")
-        subprocess.check_call([sys.executable, "manage.py", "migrate", "--noinput"])
-
-        print("Collecting static files...")
-        subprocess.check_call(
-            [sys.executable, "manage.py", "collectstatic", "--noinput"]
-        )
-
-        if os.environ.get("SEED", "").lower() in ("1", "true"):
-            print("Seeding demo data...")
-            subprocess.check_call([sys.executable, "manage.py", "seed_demo"])
-
-        print("Starting server...")
-        bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
-        workers = os.environ.get("GUNICORN_WORKERS", "3")
-        timeout = os.environ.get("GUNICORN_TIMEOUT", "120")
-        os.execvp(
-            "gunicorn",
-            [
-                "gunicorn",
-                "odp.wsgi:application",
-                "--bind",
-                bind,
-                "--workers",
-                workers,
-                "--timeout",
-                timeout,
-            ],
-        )
-
+        args = sys.argv[1:]
+        if args and args[0] == "celery":
+            run_celery(args[1:])
+        else:
+            run_web()
     except subprocess.CalledProcessError as e:
         print(f"ERROR: Command failed with exit code {e.returncode}: {e.cmd}")
         sys.exit(e.returncode)
@@ -74,3 +97,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

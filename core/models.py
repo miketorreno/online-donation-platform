@@ -7,7 +7,17 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
-class Campaign(models.Model):
+class BaseModel(models.Model):
+    """Abstract base providing consistent created/updated timestamps."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Campaign(BaseModel):
     """
     Represents a fundraising campaign created by a user.
     """
@@ -35,9 +45,6 @@ class Campaign(models.Model):
         decimal_places=2,
         default=0.00,
         help_text="The total amount raised so far.",
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True, help_text="The date and time the campaign was created."
     )
     end_date = models.DateField(help_text="The date the campaign is scheduled to end.")
     is_active = models.BooleanField(
