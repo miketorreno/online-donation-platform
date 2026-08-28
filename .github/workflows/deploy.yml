@@ -55,6 +55,16 @@ jobs:
     needs: build-and-push
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Connect the GitHub Action runner directly to private Tailscale network
+      - name: Connect to Tailscale Network
+        uses: tailscale/github-action@v2
+        with:
+          oauth-secret: "" # Empty when using standard auth key
+          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -65,9 +75,7 @@ jobs:
           script: |
             cd /home/srvr/online-donation-platform
 
-            FULL_IMAGE_PATH="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
-
-            # Update the APP_TAG environment variable in .env file
+            # Update the COMMIT_SHA environment variable in .env file
             if grep -q "COMMIT_SHA=" .env; then
               sed -i "s/COMMIT_SHA=.*/COMMIT_SHA=${{ needs.build-and-push.outputs.short_sha }}/" .env
             else
