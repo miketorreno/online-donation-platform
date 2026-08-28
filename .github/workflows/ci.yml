@@ -18,14 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DEBUG: "False"
+      # DEBUG must be True here: with DEBUG=False the production security
+      # block turns on SECURE_SSL_REDIRECT, and every view test would get a
+      # 301 (empty body) instead of rendered HTML. Security checks below
+      # happen via `check --deploy` instead.
+      DEBUG: "True"
       SECRET_KEY: "ci-only-do-not-use-in-prod"
+      # SQLite backend, since no Postgres service is provisioned here.
       DB_ENGINE: django.db.backends.sqlite3
       DB_NAME: /tmp/odp_ci.sqlite3
-      DB_USER: ""
-      DB_PASSWORD: ""
-      DB_HOST: ""
-      DB_PORT: ""
+      # Non-empty values are required: settings.py reads these via
+      # python-decouple with no defaults for USER/PASSWORD and casts PORT to
+      # int, so an empty string crashes settings import.
+      DB_USER: ci
+      DB_PASSWORD: ci
+      DB_HOST: ci
+      DB_PORT: "5432"
 
     steps:
       - name: Checkout
