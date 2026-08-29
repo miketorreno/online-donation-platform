@@ -17,7 +17,7 @@
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="chip bg-white text-pine-700 ring-1 ring-pine-100">{{ campaign.get_category_display }}</span>
+                  <span class="chip bg-surface text-pine-700 ring-1 ring-border-soft">{{ campaign.get_category_display }}</span>
                   {% if campaign.days_remaining == 0 %}
                     <span class="chip bg-pine-100 text-pine-700">Ended</span>
                   {% elif campaign.is_active %}

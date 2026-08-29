@@ -1,4 +1,4 @@
 {% load odp_extras %}
 <div class="relative h-56 overflow-hidden rounded-3xl md:h-72" {% if campaign.cover_image %}style="background-image: url('{{ campaign.cover_image.url }}'); background-size: cover; background-position: center;"{% else %}style="{% cover_art campaign %}"{% endif %}>
-  <span class="chip absolute left-4 top-4 bg-white/70 text-pine-900">{{ campaign.get_category_display }}</span>
+  <span class="chip absolute left-4 top-4 bg-white/70 text-[oklch(28%_0.07_164)]">{{ campaign.get_category_display }}</span>
 </div>

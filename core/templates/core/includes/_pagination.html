@@ -5,7 +5,7 @@
         {% if page_obj.has_previous %}
           <a href="{% querystring page=page_obj.previous_page_number %}" class="btn-ghost">Previous</a>
         {% else %}
-          <span class="inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-white px-5 py-2.5 font-semibold text-ink/40 opacity-50">Previous</span>
+          <span class="inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-surface px-5 py-2.5 font-semibold text-ink/40 opacity-50">Previous</span>
         {% endif %}
       </li>
       {% for n in page_obj.paginator.page_range %}
@@ -13,7 +13,7 @@
           {% if n == page_obj.number %}
             <span aria-current="page" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-pine-700 font-bold text-white tabular-nums">{{ n }}</span>
           {% else %}
-            <a href="{% querystring page=n %}" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-pine-100 bg-white font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900 tabular-nums">{{ n }}</a>
+            <a href="{% querystring page=n %}" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-pine-100 bg-surface font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900 tabular-nums">{{ n }}</a>
           {% endif %}
         </li>
       {% endfor %}
@@ -21,7 +21,7 @@
         {% if page_obj.has_next %}
           <a href="{% querystring page=page_obj.next_page_number %}" class="btn-ghost">Next</a>
         {% else %}
-          <span class="inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-white px-5 py-2.5 font-semibold text-ink/40 opacity-50">Next</span>
+          <span class="inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-surface px-5 py-2.5 font-semibold text-ink/40 opacity-50">Next</span>
         {% endif %}
       </li>
     </ul>
