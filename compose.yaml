@@ -23,6 +23,15 @@ services:
       - "127.0.0.1:${WEB_PORT:-8000}:${WEB_PORT:-8000}"
     env_file:
       - .env
+    # TCP-connect healthcheck on the app port: unlike an HTTP GET it is immune
+    # to the production settings (SECURE_SSL_REDIRECT 301s and ALLOWED_HOSTS
+    # 400s), so it only reflects whether gunicorn is actually listening.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,os; s=socket.create_connection(('127.0.0.1', int(os.environ.get('WEB_PORT','8000'))), 2); s.close()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
     depends_on:
       db:
         condition: service_healthy
