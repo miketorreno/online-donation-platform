@@ -51,6 +51,7 @@
               </div>
 
               <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start">
+                <a href="{% url 'campaign-stats' campaign.slug %}" class="btn-ghost px-4! py-2!">Stats</a>
                 <a href="{% url 'campaign-edit' campaign.slug %}" class="btn-ghost px-4! py-2!">Edit</a>
                 <form method="post" action="{% url 'campaign-toggle-active' campaign.slug %}">
                   {% csrf_token %}

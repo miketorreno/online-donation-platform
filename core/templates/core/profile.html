@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load odp_extras %}
+
+{% block title %}{{ profile.display_name|default:user.username }} — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+    <div class="card p-6 md:p-8">
+      <div class="flex flex-wrap items-center gap-5">
+        {% if profile.avatar %}
+          <img
+            src="{{ profile.avatar.url }}"
+            alt="Profile picture of {{ profile.display_name|default:user.username }}"
+            class="h-20 w-20 rounded-full object-cover"
+          />
+        {% else %}
+          <div
+            class="flex h-20 w-20 items-center justify-center rounded-full bg-pine-100"
+          >
+            <span class="font-display text-3xl font-extrabold text-pine-700">
+              {{ user.username|slice:":1"|upper }}
+            </span>
+          </div>
+        {% endif %}
+        <div class="min-w-0 flex-1">
+          <h1 class="font-display text-3xl font-extrabold tracking-tight md:text-4xl">
+            {{ profile.display_name|default:user.username }}
+          </h1>
+          <p class="text-sm text-ink/60">@{{ user.username }}</p>
+        </div>
+        <a href="{% url 'profile-edit' %}" class="btn-primary">Edit profile</a>
+      </div>
+
+      {% if not profile.email_verified %}
+        <p class="mt-6 flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
+          <span class="chip bg-amber-500/15 text-amber-700">Unverified</span>
+          Your email isn't verified yet.
+          <form method="post" action="{% url 'resend-verification' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="font-semibold text-pine-700 underline hover:text-pine-900">Resend verification email</button>
+          </form>
+        </p>
+      {% else %}
+        <p class="mt-6 flex items-center gap-2 rounded-xl bg-pine-50 p-3 text-sm text-pine-700">
+          <span class="chip bg-pine-100 text-pine-700">Verified</span>
+          Your email is verified.
+        </p>
+      {% endif %}
+
+      {% if profile.bio %}
+        <p class="mt-6 leading-relaxed whitespace-pre-line text-ink/80">{{ profile.bio }}</p>
+      {% endif %}
+
+      <dl class="mt-6 grid grid-cols-2 gap-3 text-sm">
+        <div class="rounded-xl bg-pine-50 p-3">
+          <dt class="text-xs font-bold uppercase tracking-wide text-ink/60">Timezone</dt>
+          <dd class="mt-0.5 font-semibold">{{ profile.timezone }}</dd>
+        </div>
+        <div class="rounded-xl bg-pine-50 p-3">
+          <dt class="text-xs font-bold uppercase tracking-wide text-ink/60">Email updates</dt>
+          <dd class="mt-0.5 font-semibold">
+            {% if profile.receives_email_updates %}On{% else %}Off{% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+{% endblock %}

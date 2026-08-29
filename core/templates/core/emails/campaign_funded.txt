@@ -1,0 +1,8 @@
+Great news!
+
+"{{ campaign.title }}" has reached its fundraising goal of ${{ campaign.goal_amount }}.
+
+See the campaign: {{ campaign_url }}
+
+Thanks for being part of it,
+The ODP team

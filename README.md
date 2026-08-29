@@ -10,6 +10,7 @@ A Django web application for community fundraising: anyone can browse campaigns,
 - PostgreSQL (production) / SQLite (local dev)
 - python-decouple
 - Gunicorn + WhiteNoise
+- Celery + Redis (background tasks / scheduled jobs)
 - Docker + Docker Compose
 - uv (package manager)
 
@@ -17,7 +18,7 @@ A Django web application for community fundraising: anyone can browse campaigns,
 
 ### Prerequisites
 
-- Python 3.12+ and `venv`
+- Python 3.12+ and `uv` (see https://docs.astral.sh/uv/)
 - Node.js (any recent LTS) + npm — only for building the stylesheet
 
 ### Installation
@@ -29,20 +30,13 @@ A Django web application for community fundraising: anyone can browse campaigns,
    cd online-donation-platform
    ```
 
-2. Create and activate a virtual environment:
+2. Install Python dependencies with uv (creates `.venv/`):
 
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   uv sync
    ```
 
-3. Install Python dependencies:
-
-   ```bash
-   pip install django python-decouple
-   ```
-
-4. Install frontend dependencies and build the stylesheet:
+3. Install frontend dependencies and build the stylesheet:
 
    ```bash
    npm install
@@ -50,23 +44,27 @@ A Django web application for community fundraising: anyone can browse campaigns,
    npm run watch      # optional: rebuild on change while developing
    ```
 
-5. Configure environment variables:
+4. Configure environment variables:
 
    ```bash
    cp .env.example .env
    ```
 
-   Edit `.env` and set `SECRET_KEY` (required), plus your database values. For local development use SQLite:
+   Edit `.env` and set `SECRET_KEY` (required), plus your database values. For local development use SQLite (make all of `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` non-empty — `DB_PORT` is cast to `int`):
 
    ```
    DB_ENGINE=django.db.backends.sqlite3
+   DB_USER=dummy
+   DB_PASSWORD=dummy
+   DB_HOST=dummy
+   DB_PORT=5432
    ```
 
-6. Apply migrations and start the server:
+5. Apply migrations and start the server:
 
    ```bash
-   python manage.py migrate
-   python manage.py runserver
+   uv run python manage.py migrate
+   uv run python manage.py runserver
    ```
 
 Open http://127.0.0.1:8000/ in your browser.
@@ -79,15 +77,15 @@ Open http://127.0.0.1:8000/ in your browser.
    cp .env.example .env
    ```
 
-   At minimum, set `SECRET_KEY` to a random string. The defaults work with the Compose PostgreSQL service.
+   At minimum, set `SECRET_KEY` to a random string. The defaults work with the Compose PostgreSQL and Redis services.
 
-2. Build and start:
+2. Build and start (web + db + redis + celery worker/beat):
 
    ```bash
    docker compose up --build
    ```
 
-   On first start the entrypoint runs migrations, collects static files, and starts Gunicorn. The app is available at http://localhost:8000/.
+   On first start the `web` entrypoint runs migrations, collects static files, and starts Gunicorn. The app is available at http://localhost:8000/.
 
 3. Seed demo data (optional):
 
@@ -103,6 +101,41 @@ Open http://127.0.0.1:8000/ in your browser.
    docker compose down         # stop containers
    docker compose down -v      # stop and wipe database volume
    ```
+
+### Celery / background tasks
+
+- `worker` runs `celery -A odp worker`; `beat` runs `celery -A odp beat` for scheduled jobs. Both are part of `docker compose up`.
+- The Celery app lives in `odp/celery.py`; tasks are declared in `core/tasks.py` (`@shared_task`, always accept primary keys — never ORM instances).
+- In CI/tests tasks run eagerly (no broker needed) via `.apply()`.
+
+### Production deployment (VPS + host Nginx)
+
+The app runs in Docker Compose on the VPS; Nginx runs **on the host** as a reverse proxy (the same host may serve other services), proxying `/` to Gunicorn and serving `/static/` and `/media/` directly.
+
+1. Set `WEB_PORT` and bind Gunicorn to loopback only; the `web` service publishes
+   `127.0.0.1:8000` so it is reachable only via the host proxy.
+2. Configure host paths for static/media via `.env`:
+
+   ```
+   HOST_STATIC_DIR=/srv/online-donation-platform/staticfiles
+   HOST_MEDIA_DIR=/srv/online-donation-platform/media
+   ```
+
+   These directories are bind-mounted into the `web` container (which writes
+   `collectstatic` output and uploads) and read directly by host Nginx.
+
+3. Install the reference config with your domain (see `infra/nginx/odp.conf`),
+   then issue a TLS cert with certbot:
+
+   ```bash
+   sudo cp infra/nginx/odp.conf /etc/nginx/sites-available/odp
+   sudo ln -s /etc/nginx/sites-available/odp /etc/nginx/sites-enabled/
+   sudo nginx -t && sudo systemctl reload nginx
+   sudo certbot --nginx -d example.com
+   ```
+
+4. Deploy via the helper script (`infra/scripts/deploy.sh`) or the CI/CD
+   pipeline (tagged `v*` releases build the image and deploy over Tailscale).
 
 ## Feature Tour
 
@@ -134,12 +167,13 @@ Demo credentials: username `demo`, password `demo-pass-1234`.
 ## Project Structure
 
 - `manage.py` — Django administration entrypoint
-- `odp/` — project configuration and settings
-- `core/` — application logic: models, views, forms, services layer, management commands
+- `odp/` — project configuration and settings (incl. `celery.py`)
+- `core/` — application logic: models, views, forms, services layer, celery tasks, management commands
 - `core/static/src/app.css` — Tailwind v4 entrypoint (theme tokens + component classes)
 - `core/static/css/app.css` — compiled stylesheet (generated by `npm run build`; don't edit by hand)
 - `templates/` — shared base and authentication templates
 - `core/templates/core/` — app-specific templates
+- `infra/` — host-level deployment assets (Nginx reverse-proxy config + scripts)
 
 ## Notes
 

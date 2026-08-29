@@ -1,0 +1,13 @@
+Hi {{ donation.donor.get_full_name|default:donation.donor.username }},
+
+Thanks for your gift of ${{ donation.amount }} to "{{ campaign.title }}".
+
+Campaign: {{ campaign.title }}
+Amount: ${{ donation.amount }}
+Date: {{ donation.donated_at|date:"M j, Y g:i A" }}
+Message: {{ donation.message }}
+
+You can track progress here: {{ campaign_url }}
+
+Thanks for supporting the community,
+The ODP team

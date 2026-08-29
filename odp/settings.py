@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+
+from celery.schedules import crontab
 from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +42,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -66,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.unread_notifications_count",
             ],
         },
     },
@@ -138,6 +144,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media (user uploads: cover images, avatars, update photos)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -146,6 +156,76 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Auth Redirects
 LOGIN_REDIRECT_URL = "/"  # Redirect to homepage after login
 LOGOUT_REDIRECT_URL = "/"  # Redirect to homepage after logout
+
+# Celery
+CELERY_BROKER_URL = config(
+    "CELERY_BROKER_URL", default="redis://localhost:6379/0"
+)
+CELERY_RESULT_BACKEND = config(
+    "CELERY_RESULT_BACKEND", default="redis://localhost:6379/0"
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
+
+# Run tasks synchronously in dev/tests (DEBUG=true) so no broker is required;
+# set CELERY_TASK_ALWAYS_EAGER=false in production to use the real broker.
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=DEBUG, cast=bool)
+
+# Periodic (Beat) schedule — campaign lifecycle email triggers. Code-defined
+# schedule (django-celery-beat is not used because it requires Django < 6.1).
+# Run the scheduler with: celery -A odp beat --loglevel=info
+CELERY_BEAT_SCHEDULE = {
+    "check-campaign-lifecycle-daily": {
+        "task": "core.check_campaign_lifecycle",
+        "schedule": crontab(hour=9, minute=0),
+    },
+}
+
+# Email (dev/tests default to a file backend; override EMAIL_BACKEND in prod)
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.filebased.EmailBackend",
+)
+EMAIL_FILE_PATH = BASE_DIR / "emails"
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@localhost")
+
+# Base URL for building absolute links in emails (no trailing slash).
+BASE_URL = config("BASE_URL", default="http://127.0.0.1:8000")
+
+# Payment gateway abstraction. "simulated" is the default (no keys required);
+# swap in a real gateway by implementing PaymentProvider and setting this to
+# the dotted path of its factory.
+PAYMENT_PROVIDER = config("PAYMENT_PROVIDER", default="simulated")
+
+# DRF (public REST API, Phase 6)
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Online Donation Platform API",
+    "DESCRIPTION": "Public REST API for browsing campaigns and creators.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 # Production security settings (only when DEBUG is off)
 if not DEBUG:

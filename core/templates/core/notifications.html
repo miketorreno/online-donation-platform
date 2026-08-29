@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="font-display text-3xl font-extrabold tracking-tight md:text-4xl">Notifications</h1>
+      {% if notifications and unread_count %}
+        <form method="post" action="{% url 'notification-read-all' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost">Mark all as read</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if notifications %}
+      <ul class="mt-6 flex flex-col gap-3">
+        {% for notification in notifications %}
+          <li class="card flex flex-wrap items-center justify-between gap-x-4 gap-y-1 p-4 md:p-5 {% if not notification.read %}ring-1 ring-marigold-300{% endif %}">
+            <div class="min-w-0 flex-1">
+              <p class="{% if not notification.read %}font-semibold{% else %}text-ink/80{% endif %}">
+                {{ notification.message }}
+              </p>
+              <p class="mt-0.5 text-xs text-ink/60">{{ notification.created_at|date:"M j, Y g:i A" }}</p>
+            </div>
+            <div class="flex shrink-0 items-center gap-2 text-sm">
+              {% if notification.campaign %}
+                <a href="{% url 'campaign-detail' notification.campaign.slug %}" class="btn-ghost">View</a>
+              {% endif %}
+              {% if not notification.read %}
+                <form method="post" action="{% url 'notification-read' notification.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="text-pine-700 underline hover:text-pine-900">Mark read</button>
+                </form>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      {% include "core/includes/_pagination.html" %}
+    {% else %}
+      <div class="card mt-6 p-10 text-center">
+        <p class="font-display text-xl font-bold tracking-tight">You're all caught up</p>
+        <p class="mx-auto mt-2 max-w-sm text-ink/60">
+          No notifications right now. Save campaigns and follow their updates to see activity here.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

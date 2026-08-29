@@ -19,7 +19,7 @@
       </div>
     {% endif %}
 
-    <form method="post" class="card mt-6 space-y-5 p-6 md:p-8">
+    <form method="post" enctype="multipart/form-data" class="card mt-6 space-y-5 p-6 md:p-8">
       {% csrf_token %}
       {% for field in form %}
         <div>

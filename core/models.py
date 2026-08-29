@@ -7,7 +7,17 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
-class Campaign(models.Model):
+class BaseModel(models.Model):
+    """Abstract base providing consistent created/updated timestamps."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Campaign(BaseModel):
     """
     Represents a fundraising campaign created by a user.
     """
@@ -36,9 +46,6 @@ class Campaign(models.Model):
         default=0.00,
         help_text="The total amount raised so far.",
     )
-    created_at = models.DateTimeField(
-        auto_now_add=True, help_text="The date and time the campaign was created."
-    )
     end_date = models.DateField(help_text="The date the campaign is scheduled to end.")
     is_active = models.BooleanField(
         default=True, help_text="Is the campaign currently accepting donations?"
@@ -65,6 +72,20 @@ class Campaign(models.Model):
         choices=Category.choices,
         default=Category.COMMUNITY,
         help_text="The cause category this campaign belongs to.",
+    )
+    cover_image = models.ImageField(
+        upload_to="covers/",
+        blank=True,
+        null=True,
+        help_text="Optional upload; falls back to the generated gradient cover art.",
+    )
+    funded_notified = models.BooleanField(
+        default=False,
+        help_text="Whether the funded notification has already been sent.",
+    )
+    expiring_notified = models.BooleanField(
+        default=False,
+        help_text="Whether the expiring-soon notification has already been sent.",
     )
 
     class Meta:
@@ -165,6 +186,10 @@ class Donation(models.Model):
         ordering = ["-donated_at"]  # Show most recent donations first
         verbose_name = "Donation"
         verbose_name_plural = "Donations"
+        indexes = [
+            models.Index(fields=["donated_at"], name="donation_donated_at_idx"),
+            models.Index(fields=["campaign", "donated_at"], name="donation_camp_donated_idx"),
+        ]
 
     def __str__(self):
         """
@@ -172,3 +197,194 @@ class Donation(models.Model):
         """
         donor_name = self.donor.username if self.donor else "Anonymous"
         return f"{donor_name} donated {self.amount} to {self.campaign.title}"
+
+
+class CampaignUpdate(BaseModel):
+    """
+    A public update/milestone posted by a campaign's creator (updates timeline).
+    """
+
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="updates",
+        help_text="The campaign this update belongs to.",
+    )
+    title = models.CharField(
+        max_length=200, help_text="Short headline for the update."
+    )
+    body = models.TextField(
+        help_text="The full text of the update."
+    )
+    image = models.ImageField(
+        upload_to="updates/",
+        blank=True,
+        null=True,
+        help_text="Optional image to accompany the update.",
+    )
+    is_pinned = models.BooleanField(
+        default=False,
+        help_text="Pin this update to the top of the campaign timeline.",
+    )
+
+    class Meta:
+        ordering = ["-is_pinned", "-created_at"]
+        verbose_name = "Campaign Update"
+        verbose_name_plural = "Campaign Updates"
+
+    def __str__(self):
+        return f"{self.title} ({self.campaign.title})"
+
+
+class Profile(BaseModel):
+    """
+    Extended identity fields for a user (created alongside the user).
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+        help_text="The user this profile belongs to.",
+    )
+    display_name = models.CharField(
+        max_length=100, blank=True, help_text="Name to show instead of the username."
+    )
+    bio = models.TextField(
+        blank=True, help_text="A short bio shown on the profile."
+    )
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+        help_text="Optional profile picture.",
+    )
+    timezone = models.CharField(
+        max_length=64, default="UTC", help_text="The user's timezone."
+    )
+    email_verified = models.BooleanField(
+        default=False, help_text="Whether the email address has been verified."
+    )
+    receives_email_updates = models.BooleanField(
+        default=True, help_text="Opt in to email updates for saved campaigns."
+    )
+
+    class Meta:
+        verbose_name = "Profile"
+        verbose_name_plural = "Profiles"
+
+    def __str__(self):
+        return self.display_name or self.user.username
+
+
+class EmailVerificationToken(BaseModel):
+    """
+    Single-use token for verifying a user's email address.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_verification_token",
+        help_text="The user this verification token belongs to.",
+    )
+    token = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField(
+        help_text="When the token stops being valid."
+    )
+
+    class Meta:
+        verbose_name = "Email Verification Token"
+        verbose_name_plural = "Email Verification Tokens"
+
+    def __str__(self):
+        return f"{self.user} ({self.token[:8]}...)"
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+
+class SavedCampaign(BaseModel):
+    """
+    A campaign a user wants to follow (receives update notifications by default).
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_campaigns",
+        help_text="The user who saved this campaign.",
+    )
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+        help_text="The saved campaign.",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "campaign"], name="unique_user_campaign_save"
+            )
+        ]
+        verbose_name = "Saved Campaign"
+        verbose_name_plural = "Saved Campaigns"
+
+    def __str__(self):
+        return f"{self.user} saved {self.campaign.title}"
+
+
+class Notification(BaseModel):
+    """
+    An in-app notification delivered to a recipient (informational only).
+    """
+
+    class Kind(models.TextChoices):
+        UPDATE_POSTED = "update_posted", "Update posted"
+        CAMPAIGN_FUNDED = "campaign_funded", "Campaign funded"
+        EXPIRING_SOON = "expiring_soon", "Expiring soon"
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        help_text="The user who receives this notification.",
+    )
+    kind = models.CharField(
+        max_length=20,
+        choices=Kind.choices,
+        help_text="The type of notification.",
+    )
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        help_text="The related campaign, if any.",
+    )
+    update = models.ForeignKey(
+        CampaignUpdate,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        help_text="The related campaign update, if any.",
+    )
+    message = models.CharField(
+        max_length=300,
+        help_text="Human-readable notification text.",
+    )
+    read = models.BooleanField(default=False, help_text="Whether the user has read it.")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        return f"{self.recipient}: {self.message}"
+

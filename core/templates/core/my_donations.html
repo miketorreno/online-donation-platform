@@ -6,6 +6,9 @@
 {% block content %}
   <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
     <h1 class="font-display text-3xl font-extrabold tracking-tight md:text-4xl">My donations</h1>
+    <p class="mt-1 text-sm text-ink/60">
+      <a href="{% url 'donation-export' %}" class="font-semibold text-pine-700 underline hover:text-pine-900">Export as CSV</a>
+    </p>
 
     <div class="card mt-6 flex items-baseline justify-between gap-4 p-5 md:p-6">
       <p class="text-sm font-bold uppercase tracking-wide text-ink/60">Total given</p>
