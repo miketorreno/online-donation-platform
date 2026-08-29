@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-porcelain: oklch(98.5% 0.004 160); /* page bg */
   --color-ink: oklch(22% 0.02 170); /* primary text */
@@ -16,6 +18,10 @@
   --color-rose-500: oklch(58% 0.19 20); /* destructive accents */
   --color-rose-600: oklch(52% 0.19 18);
 
+  --color-surface: oklch(99.5% 0.002 160);
+  --color-surface-muted: oklch(96% 0.015 158);
+  --color-border-soft: oklch(93% 0.02 158);
+
   --font-display: "Bricolage Grotesque", "Public Sans", system-ui, sans-serif;
   --font-sans: "Public Sans", system-ui, sans-serif;
   --animate-fill-up: fill-up 0.9s ease-out both;
@@ -28,6 +34,23 @@
       transform: scaleX(1);
     }
   }
+}
+
+.dark {
+  --color-porcelain: oklch(16% 0.015 160);
+  --color-ink: oklch(92% 0.01 160);
+  --color-pine-50: oklch(24% 0.02 158);
+  --color-pine-100: oklch(26% 0.02 158);
+  --color-pine-400: oklch(70% 0.09 156);
+  --color-pine-500: oklch(72% 0.10 156);
+  --color-pine-600: oklch(66% 0.10 156);
+  --color-pine-700: oklch(60% 0.10 158);
+  --color-pine-900: oklch(78% 0.09 160);
+  --color-surface: oklch(20% 0.015 160);
+  --color-surface-muted: oklch(24% 0.02 158);
+  --color-border-soft: oklch(26% 0.02 158);
+  --color-rose-500: oklch(66% 0.18 20);
+  --color-rose-600: oklch(72% 0.18 18);
 }
 
 @layer base {
@@ -58,19 +81,19 @@
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-pine-700 px-6 py-3 font-semibold text-white transition hover:bg-pine-900 active:scale-[0.98];
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-pine-100 bg-white px-5 py-2.5 font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border-soft bg-surface px-5 py-2.5 font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900;
   }
   .btn-danger-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-rose-500/30 bg-white px-5 py-2.5 font-semibold text-rose-600 transition hover:bg-rose-500/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-rose-500/30 bg-surface px-5 py-2.5 font-semibold text-rose-600 transition hover:bg-rose-500/10;
   }
   .card {
-    @apply rounded-3xl bg-white shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)];
+    @apply rounded-3xl bg-surface shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)];
   }
   .field-label {
     @apply block text-sm font-semibold mb-1.5;
   }
   .field-input {
-    @apply w-full rounded-xl border border-pine-100 bg-white px-4 py-3 text-ink placeholder:text-ink/35 focus:border-pine-500 focus:outline-none focus:ring-2 focus:ring-pine-500/30;
+    @apply w-full rounded-xl border border-border-soft bg-surface px-4 py-3 text-ink placeholder:text-ink/35 focus:border-pine-500 focus:outline-none focus:ring-2 focus:ring-pine-500/30;
   }
   .field-error {
     @apply mt-1.5 text-sm font-medium text-rose-600;
