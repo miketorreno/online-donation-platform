@@ -186,6 +186,10 @@ class Donation(models.Model):
         ordering = ["-donated_at"]  # Show most recent donations first
         verbose_name = "Donation"
         verbose_name_plural = "Donations"
+        indexes = [
+            models.Index(fields=["donated_at"], name="donation_donated_at_idx"),
+            models.Index(fields=["campaign", "donated_at"], name="donation_camp_donated_idx"),
+        ]
 
     def __str__(self):
         """

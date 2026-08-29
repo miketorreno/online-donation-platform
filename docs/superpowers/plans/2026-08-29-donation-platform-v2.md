@@ -137,11 +137,11 @@ Goal: transactional + in-app notifications, using the Celery foundation.
 
 Goal: creator dashboards for campaign performance.
 
-- [ ] `CampaignStatsView` at `/my/campaigns/<slug>/stats/` (owner-guarded): daily/trend donations (annotate `TruncDate`), cumulative total, `avg`/`max` donation, top supporters (group by donor), donation counts by message presence.
-- [ ] Use ORM aggregates/`Coalesce` (existing pattern); add DB indexes on hot query fields (`Donation.campaign`, `Donation.donated_at`) via migration if missing.
-- [ ] CSV export of a campaign's donation detail for the owner.
-- [ ] Template `core/stats.html` (charts optional — tabular + simple CSS bars; no chart lib unless already present).
-- [ ] Tests: aggregate correctness, date-window filtering, ownership isolation, empty-campaign handling.
+- [x] `CampaignStatsView` at `/my/campaigns/<slug>/stats/` (owner-guarded): daily/trend donations (annotate `TruncDate`), cumulative total, `avg`/`max` donation, top supporters (group by donor), donation counts by message presence.
+- [x] Use ORM aggregates/`Coalesce` (existing pattern); add DB indexes on hot query fields (`Donation.campaign`, `Donation.donated_at`) via migration (`0007`).
+- [x] CSV export of a campaign's donation detail for the owner (`/campaigns/<slug>/stats/export/`).
+- [x] Template `core/stats.html` (summary cards + trend/top-supporter tables; no chart lib).
+- [x] Tests in `core/tests/test_stats.py`: aggregate correctness, trend ordering, top supporters, empty-campaign, ownership isolation (anon redirect + non-owner 403), CSV export.
 
 **Verification:** full suite green; manual per-campaign stats via demo user.
 

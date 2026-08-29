@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load odp_extras %}
+
+{% block title %}Stats — {{ campaign.title }} — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-sm text-ink/60">
+          <a href="{% url 'campaign-detail' campaign.slug %}" class="hover:text-pine-700">{{ campaign.title }}</a>
+        </p>
+        <h1 class="font-display text-3xl font-extrabold tracking-tight md:text-4xl">Campaign stats</h1>
+      </div>
+      <a href="{% url 'campaign-stats-export' campaign.slug %}" class="btn-ghost">Export CSV</a>
+    </div>
+
+    <div class="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">Raised</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ total_raised|usd }}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">Donations</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ donation_count }}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">Supporters</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ supporter_count }}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">Avg gift</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ average_donation|usd }}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">Largest</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ maximum_donation|usd }}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs uppercase tracking-wide text-ink/60">With message</p>
+        <p class="mt-1 font-display text-xl font-bold tabular-nums">{{ with_message_count }}/{{ donation_count }}</p>
+      </div>
+    </div>
+
+    <div class="mt-10 grid gap-6 lg:grid-cols-2">
+      <section class="card p-5">
+        <h2 class="font-display text-xl font-bold tracking-tight">Trend</h2>
+        {% if trend %}
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-ink/60">
+                  <th class="pb-2 pr-4 font-semibold">Day</th>
+                  <th class="pb-2 pr-4 text-right font-semibold">Donated</th>
+                  <th class="pb-2 text-right font-semibold">Cumulative</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in trend %}
+                  <tr class="border-t border-pine-100">
+                    <td class="py-2 pr-4 tabular-nums">{{ entry.day|date:"M j, Y" }}</td>
+                    <td class="py-2 pr-4 text-right tabular-nums">{{ entry.daily|usd }}</td>
+                    <td class="py-2 text-right tabular-nums">{{ entry.cumulative|usd }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="mt-4 text-ink/60">No donations yet.</p>
+        {% endif %}
+      </section>
+
+      <section class="card p-5">
+        <h2 class="font-display text-xl font-bold tracking-tight">Top supporters</h2>
+        {% if top_supporters %}
+          <ul class="mt-4">
+            {% for supporter in top_supporters %}
+              <li class="flex items-center justify-between gap-4 border-t border-pine-100 py-2.5 first:border-t-0">
+                <span class="min-w-0 truncate font-medium">{{ supporter.donor__username }}</span>
+                <span class="shrink-0 text-sm text-ink/60">
+                  {{ supporter.count }} gift{{ supporter.count|pluralize }}
+                </span>
+                <span class="shrink-0 font-semibold tabular-nums">{{ supporter.total|usd }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="mt-4 text-ink/60">No named supporters yet.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q, Sum, Value
-from django.db.models.functions import Coalesce
+from django.db.models import Avg, Count, Max, Q, Sum, Value
+from django.db.models.functions import Coalesce, TruncDate
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -16,6 +16,7 @@ from django.views.generic import (
     DetailView,
     FormView,
     ListView,
+    TemplateView,
     UpdateView,
 )
 
@@ -502,3 +503,102 @@ def mark_notification_read(request, pk):
 def mark_all_notifications_read(request):
     request.user.notifications.filter(read=False).update(read=True)
     return redirect("notifications")
+
+
+class CampaignStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "core/stats.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.campaign = get_object_or_404(Campaign, slug=self.kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        return self.campaign.creator_id == self.request.user.id
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        raise PermissionDenied
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        campaign = self.campaign
+        donations = campaign.donations
+
+        totals = donations.aggregate(
+            total=Coalesce(Sum("amount"), Value(Decimal("0.00"))),
+            average=Coalesce(Avg("amount"), Value(Decimal("0.00"))),
+            maximum=Coalesce(Max("amount"), Value(Decimal("0.00"))),
+            count=Count("id"),
+            supporter_count=Count("donor", distinct=True),
+        )
+        with_message = donations.filter(message__iregex=r"\w").count()
+
+        daily = (
+            donations.annotate(day=TruncDate("donated_at"))
+            .values("day")
+            .annotate(total=Sum("amount"))
+            .order_by("day")
+        )
+        running = Decimal("0.00")
+        trend = []
+        for entry in daily:
+            running += entry["total"]
+            trend.append(
+                {
+                    "day": entry["day"],
+                    "daily": entry["total"],
+                    "cumulative": running,
+                }
+            )
+        trend.reverse()
+
+        top_supporters = (
+            donations.exclude(donor=None)
+            .values("donor__username")
+            .annotate(total=Sum("amount"), count=Count("id"))
+            .order_by("-total")[:10]
+        )
+
+        ctx.update(
+            campaign=campaign,
+            total_raised=totals["total"],
+            average_donation=totals["average"],
+            maximum_donation=totals["maximum"],
+            donation_count=totals["count"],
+            supporter_count=totals["supporter_count"],
+            with_message_count=with_message,
+            without_message_count=totals["count"] - with_message,
+            trend=trend,
+            top_supporters=top_supporters,
+        )
+        return ctx
+
+
+@login_required
+def campaign_stats_export(request, slug):
+    import csv
+
+    from django.utils import timezone
+
+    campaign = get_object_or_404(Campaign, slug=slug)
+    if campaign.creator_id != request.user.id:
+        raise PermissionDenied
+    donations = campaign.donations.select_related("donor").order_by("-donated_at")
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="{campaign.slug}-donations-{timezone.now().strftime("%Y%m%d")}.csv"'
+    )
+    writer = csv.writer(response)
+    writer.writerow(["donated_at", "donor", "amount", "message", "transaction_id"])
+    for d in donations:
+        writer.writerow(
+            [
+                d.donated_at.isoformat(),
+                d.donor.username if d.donor else "Anonymous",
+                str(d.amount),
+                d.message,
+                d.transaction_id or "",
+            ]
+        )
+    return response
