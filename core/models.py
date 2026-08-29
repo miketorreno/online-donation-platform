@@ -73,6 +73,12 @@ class Campaign(BaseModel):
         default=Category.COMMUNITY,
         help_text="The cause category this campaign belongs to.",
     )
+    cover_image = models.ImageField(
+        upload_to="covers/",
+        blank=True,
+        null=True,
+        help_text="Optional upload; falls back to the generated gradient cover art.",
+    )
 
     class Meta:
         ordering = ["-created_at"]  # Show newest campaigns first by default
@@ -179,3 +185,41 @@ class Donation(models.Model):
         """
         donor_name = self.donor.username if self.donor else "Anonymous"
         return f"{donor_name} donated {self.amount} to {self.campaign.title}"
+
+
+class CampaignUpdate(BaseModel):
+    """
+    A public update/milestone posted by a campaign's creator (updates timeline).
+    """
+
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="updates",
+        help_text="The campaign this update belongs to.",
+    )
+    title = models.CharField(
+        max_length=200, help_text="Short headline for the update."
+    )
+    body = models.TextField(
+        help_text="The full text of the update."
+    )
+    image = models.ImageField(
+        upload_to="updates/",
+        blank=True,
+        null=True,
+        help_text="Optional image to accompany the update.",
+    )
+    is_pinned = models.BooleanField(
+        default=False,
+        help_text="Pin this update to the top of the campaign timeline.",
+    )
+
+    class Meta:
+        ordering = ["-is_pinned", "-created_at"]
+        verbose_name = "Campaign Update"
+        verbose_name_plural = "Campaign Updates"
+
+    def __str__(self):
+        return f"{self.title} ({self.campaign.title})"
+

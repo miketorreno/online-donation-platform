@@ -52,23 +52,28 @@ Goal: unblock all downstream phases (media, background jobs, host-Nginx static/m
 Goal: let creators post public updates/milestones and attach a real cover image.
 
 ### 2.1 `CampaignUpdate` model
-- [ ] New model in `core/models.py`: FK → `Campaign` (`related_name="updates"`, CASCADE), `title` (CharField 200), `body` (TextField), optional `image` (ImageField, blank/null, upload_to `updates/`), `is_pinned` (BooleanField default False), inherits `BaseModel` (`created_at`/`updated_at`).
-- [ ] `Meta.ordering = ["-created_at"]`, `__str__`.
-- [ ] Migration (additive) + `core/admin.py` registration (list_display, list_filter campaign, search title/body).
-- [ ] Tests in `core/tests/test_models.py`: creation, ordering, image blank default.
+- [x] New model in `core/models.py`: FK → `Campaign` (`related_name="updates"`, CASCADE), `title` (CharField 200), `body` (TextField), optional `image` (ImageField, blank/null, upload_to `updates/`), `is_pinned` (BooleanField default False), inherits `BaseModel` (`created_at`/`updated_at`).
+- [x] `Meta.ordering = ["-is_pinned", "-created_at"]`, `__str__`.
+- [x] Migration (additive) + `core/admin.py` registration (list_display, list_filter campaign, search title/body).
+- [x] Tests in `core/tests/test_views_updates.py`: creation, ordering, image blank default.
 
 ### 2.2 Campaign cover image
-- [ ] Add optional `Campaign.cover_image` (ImageField, blank/null, upload_to `covers/`).
-- [ ] Template: `campaign_detail.html` + `_campaign_card.html` render `cover_image` when present, else fall back to `{% cover_art %}` gradient.
-- [ ] Migration + admin `prepopulated` untouched; add `cover_image` to admin fields.
+- [x] Add optional `Campaign.cover_image` (ImageField, blank/null, upload_to `covers/`).
+- [x] Template: `campaign_detail.html` + `_campaign_card.html` render `cover_image` when present, else fall back to `{% cover_art %}` gradient.
+- [x] Migration + admin `prepopulated` untouched; add `cover_image` to admin fields.
 - [ ] Tests: cover image shows vs gradient fallback.
 
 ### 2.3 Update CRUD (owner-guarded)
-- [ ] `CampaignUpdateCreateView`, `UpdateView`, `DeleteView` (LoginRequired + UserPassesTestMixin owner-of-campaign; `handle_no_permission` pattern).
-- [ ] Routes (before `<slug>` detail): `campaigns/<slug>/updates/new/`, `…/updates/<pk>/edit/`, `…/updates/<pk>/delete/`.
-- [ ] Public timeline on `campaign_detail.html` (paginated or capped list) + "Post update" button for owner.
-- [ ] Templates: `core/updates/campaignupdate_form.html`, `_confirm_delete.html`; `enctype="multipart/form-data"` on forms with images.
-- [ ] Tests: owner can CRUD; non-owner 403; anonymous redirect; image upload writes to MEDIA_ROOT.
+- [x] `CampaignUpdateCreateView`, `UpdateView`, `DeleteView` (LoginRequired + `OwnerOrDeniedMixin`; `handle_no_permission` pattern).
+- [x] Routes (before `<slug>` detail): `campaigns/<slug>/updates/new/`, `…/updates/<pk>/edit/`, `…/updates/<pk>/delete/`.
+- [x] Public timeline on `campaign_detail.html` (capped list) + "Post update" button for owner.
+- [x] Templates: `core/campaignupdate_form.html`, `core/campaignupdate_confirm_delete.html`; `enctype="multipart/form-data"` on forms with images.
+- [~] Tests: owner can CRUD; non-owner 403; anonymous redirect; image upload writes to MEDIA_ROOT (image-upload case not yet asserted).
+
+### 2.4 PaymentProvider seam (folded into Phase 2)
+- [x] `core/payments.py`: `PaymentProvider` protocol + `SimulatedProvider` (`SIM-<uuid4 hex>`), selected via `PAYMENT_PROVIDER` setting.
+- [x] `record_donation` calls the configured provider via `get_provider()`.
+- [x] Tests in `core/tests/test_payments.py`: default simulated, `SIM-` prefix, unknown provider raises.
 
 **Verification:** `makemigrations`, migrate on SQLite, full suite green, manual owner flow with an image.
 

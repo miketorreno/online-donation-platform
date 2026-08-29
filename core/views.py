@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -18,8 +18,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import CampaignForm, DonateForm, StyledUserCreationForm
-from .models import Campaign
+from .forms import CampaignForm, CampaignUpdateForm, DonateForm, StyledUserCreationForm
+from .models import Campaign, CampaignUpdate
 from .services import DonationError, record_donation
 
 
@@ -33,6 +33,7 @@ class CampaignDetailView(DetailView):
     model = Campaign
     context_object_name = "campaign"
     template_name = "core/campaign_detail.html"
+    updates_limit = 50
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -40,6 +41,11 @@ class CampaignDetailView(DetailView):
         ctx["recent_donations"] = campaign.donations.select_related("donor")[:10]
         ctx["supporter_count"] = campaign.donations.count()
         ctx["can_receive"] = campaign.is_active and campaign.days_remaining > 0
+        ctx["updates"] = campaign.updates.all()[: self.updates_limit]
+        ctx["is_owner"] = (
+            hasattr(self.request, "user") and self.request.user.is_authenticated
+            and campaign.creator_id == self.request.user.id
+        )
         return ctx
 
 
@@ -167,6 +173,101 @@ class CampaignDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def form_valid(self, form):
         messages.success(self.request, "Campaign deleted.")
         return super().form_valid(form)
+
+
+class OwnerOrDeniedMixin(UserPassesTestMixin):
+    """Require the requesting user to own the targeted campaign."""
+
+    def get_campaign(self):
+        if not hasattr(self, "campaign"):
+            self.campaign = None
+        return self.campaign
+
+    def test_func(self):
+        campaign = self.get_campaign()
+        if campaign is None:
+            return False
+        return campaign.creator_id == self.request.user.id
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        raise PermissionDenied
+
+
+class CampaignUpdateCreateView(LoginRequiredMixin, OwnerOrDeniedMixin, CreateView):
+    model = CampaignUpdate
+    form_class = CampaignUpdateForm
+    template_name = "core/campaignupdate_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.campaign = get_object_or_404(Campaign, slug=self.kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_campaign(self):
+        return self.campaign
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["campaign"] = self.campaign
+        return ctx
+
+    def form_valid(self, form):
+        form.instance.campaign = self.campaign
+        response = super().form_valid(form)
+        messages.success(self.request, "Update posted.")
+        return response
+
+    def get_success_url(self):
+        return reverse("campaign-detail", kwargs={"slug": self.campaign.slug})
+
+
+class CampaignUpdateUpdateView(LoginRequiredMixin, OwnerOrDeniedMixin, UpdateView):
+    model = CampaignUpdate
+    form_class = CampaignUpdateForm
+    template_name = "core/campaignupdate_form.html"
+
+    def get_campaign(self):
+        return self.get_object().campaign
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["campaign"] = self.get_object().campaign
+        return ctx
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Update saved.")
+        return response
+
+    def get_success_url(self):
+        return reverse("campaign-detail", kwargs={"slug": self.get_object().campaign.slug})
+
+
+class CampaignUpdateDeleteView(LoginRequiredMixin, OwnerOrDeniedMixin, DeleteView):
+    model = CampaignUpdate
+    template_name = "core/campaignupdate_confirm_delete.html"
+
+    def get_campaign(self):
+        return self.get_object().campaign
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["campaign"] = self.get_object().campaign
+        return ctx
+
+    def form_valid(self, form):
+        campaign = self.get_object().campaign
+        response = super().form_valid(form)
+        messages.success(self.request, "Update deleted.")
+        self._success_campaign_slug = campaign.slug
+        return response
+
+    def get_success_url(self):
+        slug = getattr(self, "_success_campaign_slug", None)
+        if slug is None:
+            slug = self.get_object().campaign.slug
+        return reverse("campaign-detail", kwargs={"slug": slug})
 
 
 @require_POST

@@ -182,6 +182,11 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@localhost")
 
+# Payment gateway abstraction. "simulated" is the default (no keys required);
+# swap in a real gateway by implementing PaymentProvider and setting this to
+# the dotted path of its factory.
+PAYMENT_PROVIDER = config("PAYMENT_PROVIDER", default="simulated")
+
 # Production security settings (only when DEBUG is off)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

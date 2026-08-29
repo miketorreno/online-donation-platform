@@ -6,6 +6,9 @@ from .views import (
     CampaignDeleteView,
     CampaignDetailView,
     CampaignListView,
+    CampaignUpdateCreateView,
+    CampaignUpdateDeleteView,
+    CampaignUpdateUpdateView,
     CampaignUpdateView,
     DonateView,
     MyCampaignsView,
@@ -21,6 +24,22 @@ urlpatterns = [
     # campaign-create MUST precede every campaigns/<slug:slug>/... route
     # so "new" is never captured as a slug.
     path("campaigns/new/", CampaignCreateView.as_view(), name="campaign-create"),
+    # Campaign update routes (before <slug> detail so "updates" leaves aren't eaten).
+    path(
+        "campaigns/<slug:slug>/updates/new/",
+        CampaignUpdateCreateView.as_view(),
+        name="campaign-update-create",
+    ),
+    path(
+        "campaigns/<slug:slug>/updates/<int:pk>/edit/",
+        CampaignUpdateUpdateView.as_view(),
+        name="campaign-update-edit",
+    ),
+    path(
+        "campaigns/<slug:slug>/updates/<int:pk>/delete/",
+        CampaignUpdateDeleteView.as_view(),
+        name="campaign-update-delete",
+    ),
     path("campaigns/<slug:slug>/edit/", CampaignUpdateView.as_view(), name="campaign-edit"),
     path("campaigns/<slug:slug>/delete/", CampaignDeleteView.as_view(), name="campaign-delete"),
     path(

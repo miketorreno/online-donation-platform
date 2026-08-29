@@ -6,6 +6,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from core.models import Campaign, Donation
+from core.payments import get_provider
 
 
 class DonationError(Exception):
@@ -22,13 +23,14 @@ def record_donation(*, campaign: Campaign, amount: Decimal, donor=None, message:
     if not campaign.is_active or campaign.end_date < timezone.now().date():
         raise DonationError("This campaign is not accepting donations.")
     quantized = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    transaction_id = get_provider().charge(amount=quantized, donor=donor, campaign=campaign)
     with transaction.atomic():
         donation = Donation.objects.create(
             campaign=campaign,
             amount=quantized,
             donor=donor,
             message=(message or "").strip(),
-            transaction_id=generate_transaction_id(),
+            transaction_id=transaction_id,
         )
         Campaign.objects.filter(pk=campaign.pk).update(
             current_amount=F("current_amount") + quantized

@@ -4,7 +4,7 @@
   href="{% url 'campaign-detail' campaign.slug %}"
   class="card group flex flex-col overflow-hidden transition hover:-translate-y-0.5"
 >
-  <div class="relative h-36 w-full" style="{% cover_art campaign %}">
+  <div class="relative h-36 w-full" {% if campaign.cover_image %}style="background-image: url('{{ campaign.cover_image.url }}'); background-size: cover; background-position: center;"{% else %}style="{% cover_art campaign %}"{% endif %}>
     <span class="chip absolute left-3 top-3 bg-white/90 text-pine-700">{{ campaign.get_category_display }}</span>
     {% if campaign.days_remaining == 0 %}
       <span class="chip absolute right-3 top-3 bg-rose-500/90 text-white">Ended</span>

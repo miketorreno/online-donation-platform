@@ -67,5 +67,56 @@
         </div>
       </aside>
     </div>
+
+    <div class="mt-12 max-w-3xl">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-display text-2xl font-extrabold tracking-tight">Updates</h2>
+        {% if is_owner %}
+          <a href="{% url 'campaign-update-create' campaign.slug %}" class="btn-primary">Post an update</a>
+        {% endif %}
+      </div>
+
+      {% if updates %}
+        <ol class="mt-4 space-y-4">
+          {% for update in updates %}
+            <li class="card p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="font-display font-semibold leading-snug tracking-tight">
+                    {% if update.is_pinned %}
+                      <span class="chip mr-2 bg-marigold-400/20 text-pine-900">Pinned</span>
+                    {% endif %}
+                    {{ update.title }}
+                  </h3>
+                  <p class="mt-0.5 text-xs text-ink/60">{{ update.created_at|date:"M j, Y" }}</p>
+                </div>
+                {% if is_owner %}
+                  <div class="flex shrink-0 items-center gap-2 text-sm">
+                    <a href="{% url 'campaign-update-edit' campaign.slug update.pk %}" class="btn-ghost">Edit</a>
+                    <a href="{% url 'campaign-update-delete' campaign.slug update.pk %}" class="btn-danger-ghost">Delete</a>
+                  </div>
+                {% endif %}
+              </div>
+              {% if update.image %}
+                <img
+                  src="{{ update.image.url }}"
+                  alt="{{ update.title }}"
+                  class="mt-4 h-48 w-full rounded-xl object-cover"
+                />
+              {% endif %}
+              <p class="mt-3 leading-relaxed whitespace-pre-line text-ink/80">{{ update.body }}</p>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="mt-4 text-sm text-ink/60">
+          {% if is_owner %}
+            No updates yet — post the first one to keep supporters in the loop.
+          {% else %}
+            No updates have been posted yet.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
   </div>
 {% endblock %}
