@@ -114,19 +114,20 @@ Goal: richer identities, verified emails, password reset, donation export, saved
 Goal: transactional + in-app notifications, using the Celery foundation.
 
 ### 4.1 Email module
-- [ ] `core/emails.py` (or `core/services/email.py`): template-backed senders using `django.core.mail` (`send_mail`/`EmailMultiAlternatives`); config already in settings (`EMAIL_BACKEND` default file backend for dev/CI).
-- [ ] Templates dir `core/templates/core/emails/`: donation receipt, verification, password reset (Phase 3), campaign funded, update posted, expiring soon.
-- [ ] Tests: `assertNumEmails`/`assertStartsWith` using file or locmem backend; correct recipients & context.
+- [x] `core/emails.py`: template-backed senders using `django.core.mail` (`send_mail`); config already in settings (`EMAIL_BACKEND` default file backend for dev/CI).
+- [x] Templates dir `core/templates/core/emails/`: donation receipt, campaign funded, update posted, expiring soon (verification/password-reset already covered).
+- [x] Tests in `core/tests/test_emails.py`: locmem backend; correct recipients & context.
 
 ### 4.2 Celery tasks (idempotent, PK-based)
-- [ ] `record_donation` (or donate view) enqueues `send_donation_receipt.delay(donation_pk)` (skip if anonymous donor).
-- [ ] Beat schedule (code-defined `CELERY_BEAT_SCHEDULE` in settings): `check_campaign_lifecycle` — daily scan for newly-funded campaigns (goal met) and expiring-soon (N days out) → send notifications (idempotent, e.g. guard on a `funded_notified`/`expiring_notified` BooleanField on Campaign to avoid duplicate sends).
-- [ ] `notify_update_posted(update_pk)` → email+in-app to `Profile.receives_email_updates=True` followers (Phase 3.4 `SavedCampaign` users or explicit followers).
+- [x] `record_donation` enqueues `send_donation_receipt_task.delay(donation_pk)` (skips anonymous/email-less donors; eager in dev/tests via `CELERY_TASK_ALWAYS_EAGER`).
+- [x] Beat schedule (code-defined `CELERY_BEAT_SCHEDULE` in settings): `check_campaign_lifecycle` — daily scan for newly-funded + expiring-soon (N days out) → notifications (idempotent via `funded_notified`/`expiring_notified` flags on Campaign).
+- [x] `notify_update_posted(update_pk)` → email+in-app to `Profile.receives_email_updates=True` followers (SavedCampaign users).
+- [x] Tests in `core/tests/test_tasks.py`: receipt, update notifications, funded/expiring lifecycle, idempotency.
 
 ### 4.3 In-app notifications
-- [ ] `Notification` model (recipient FK, verb, target Campaign/Update generic FK or nullable FKs, read BooleanField, created_at via BaseModel).
-- [ ] `NotificationsView` (inbox, mark-read, mark-all-read) + unread badge in `base.html` nav for authenticated users.
-- [ ] Tests: creation on triggers, mark-read, unread count, anonymous redirect.
+- [x] `Notification` model (recipient FK, kind, nullable Campaign/Update FKs, read BooleanField, BaseModel timestamps).
+- [x] `NotificationsView` (inbox, mark-read, mark-all-read) + unread badge in `base.html` nav (context processor `core.context_processors.unread_notifications_count`).
+- [x] Tests in `core/tests/test_notifications.py`: creation on triggers, mark-read, unread count, own-only + anonymous redirect.
 
 **Verification:** full suite green; with file backend, run a donation + an expiring campaign and confirm `.eml` files with correct recipients/subject.
 

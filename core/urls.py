@@ -13,6 +13,7 @@ from .views import (
     DonateView,
     MyCampaignsView,
     MyDonationsView,
+    NotificationsView,
     ProfileUpdateView,
     ProfileView,
     SavedCampaignsView,
@@ -31,6 +32,17 @@ urlpatterns = [
     path("my/saved/", SavedCampaignsView.as_view(), name="my-saved"),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("profile/edit/", ProfileUpdateView.as_view(), name="profile-edit"),
+    path("notifications/", NotificationsView.as_view(), name="notifications"),
+    path(
+        "notifications/<int:pk>/read/",
+        views.mark_notification_read,
+        name="notification-read",
+    ),
+    path(
+        "notifications/read-all/",
+        views.mark_all_notifications_read,
+        name="notification-read-all",
+    ),
     # campaign-create MUST precede every campaigns/<slug:slug>/... route
     # so "new" is never captured as a slug.
     path("campaigns/new/", CampaignCreateView.as_view(), name="campaign-create"),

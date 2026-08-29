@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+
+from celery.schedules import crontab
 from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -66,6 +68,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.unread_notifications_count",
             ],
         },
     },
@@ -165,9 +168,19 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
 
-# Periodic (Beat) schedule — future Phase 4 tasks (campaign lifecycle email
-# triggers) are declared here as a code-defined schedule. Run the scheduler
-# with: celery -A odp beat --loglevel=info
+# Run tasks synchronously in dev/tests (DEBUG=true) so no broker is required;
+# set CELERY_TASK_ALWAYS_EAGER=false in production to use the real broker.
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=DEBUG, cast=bool)
+
+# Periodic (Beat) schedule — campaign lifecycle email triggers. Code-defined
+# schedule (django-celery-beat is not used because it requires Django < 6.1).
+# Run the scheduler with: celery -A odp beat --loglevel=info
+CELERY_BEAT_SCHEDULE = {
+    "check-campaign-lifecycle-daily": {
+        "task": "core.check_campaign_lifecycle",
+        "schedule": crontab(hour=9, minute=0),
+    },
+}
 
 # Email (dev/tests default to a file backend; override EMAIL_BACKEND in prod)
 EMAIL_BACKEND = config(

@@ -60,6 +60,15 @@
                   href="{% url 'profile' %}"
                   class="block rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900"
                 >My profile</a>
+                <a
+                  href="{% url 'notifications' %}"
+                  class="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900"
+                >
+                  Notifications
+                  {% if unread_notifications_count %}
+                    <span class="chip bg-marigold-400 text-pine-900">{{ unread_notifications_count }}</span>
+                  {% endif %}
+                </a>
                 <hr class="my-1 border-pine-100" />
                 <form method="post" action="{% url 'logout' %}">
                   {% csrf_token %}
@@ -100,6 +109,9 @@
           <a href="{% url 'my-donations' %}" class="block py-2 font-semibold text-pine-700">My donations</a>
           <a href="{% url 'my-saved' %}" class="block py-2 font-semibold text-pine-700">Saved campaigns</a>
           <a href="{% url 'profile' %}" class="block py-2 font-semibold text-pine-700">My profile</a>
+          <a href="{% url 'notifications' %}" class="block py-2 font-semibold text-pine-700">
+            Notifications{% if unread_notifications_count %} ({{ unread_notifications_count }}){% endif %}
+          </a>
           <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button

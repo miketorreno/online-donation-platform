@@ -36,4 +36,7 @@ def record_donation(*, campaign: Campaign, amount: Decimal, donor=None, message:
             current_amount=F("current_amount") + quantized
         )
         campaign.refresh_from_db(fields=["current_amount"])
+    from .tasks import send_donation_receipt_task
+
+    send_donation_receipt_task.delay(donation.pk)
     return donation

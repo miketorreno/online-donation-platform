@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
@@ -43,4 +44,75 @@ def send_verification_email(user) -> None:
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
+    )
+
+
+def _campaign_url(campaign) -> str:
+    return settings.BASE_URL + campaign.get_absolute_url()
+
+
+def _render(subject, template, context, recipient) -> None:
+    """Render a template and send a plain-text email."""
+    body = render_to_string(template, context).strip()
+    send_mail(
+        subject=subject,
+        message=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient],
+    )
+
+
+def send_donation_receipt(donation) -> None:
+    """Send a receipt to a donor (no-op for anonymous donations)."""
+    if donation.donor is None or not donation.donor.email:
+        return
+    _render(
+        subject=f"Your {donation.amount} gift to {donation.campaign.title}",
+        template="core/emails/donation_receipt.txt",
+        context={
+            "donation": donation,
+            "campaign": donation.campaign,
+            "campaign_url": _campaign_url(donation.campaign),
+        },
+        recipient=donation.donor.email,
+    )
+
+
+def send_campaign_funded_email(campaign, recipient_email: str) -> None:
+    """Notify a saved/following user that a campaign reached its goal."""
+    _render(
+        subject=f"{campaign.title} reached its goal!",
+        template="core/emails/campaign_funded.txt",
+        context={
+            "campaign": campaign,
+            "campaign_url": _campaign_url(campaign),
+        },
+        recipient=recipient_email,
+    )
+
+
+def send_expiring_soon_email(campaign, recipient_email: str) -> None:
+    """Notify a saved/following user that a campaign is about to expire."""
+    _render(
+        subject=f"{campaign.title} is closing soon",
+        template="core/emails/expiring_soon.txt",
+        context={
+            "campaign": campaign,
+            "campaign_url": _campaign_url(campaign),
+        },
+        recipient=recipient_email,
+    )
+
+
+def send_update_posted_email(campaign, update, recipient_email: str) -> None:
+    """Notify a saved/following user of a new campaign update."""
+    _render(
+        subject=f"New update on {campaign.title}: {update.title}",
+        template="core/emails/update_posted.txt",
+        context={
+            "campaign": campaign,
+            "update": update,
+            "campaign_url": _campaign_url(campaign),
+        },
+        recipient=recipient_email,
     )

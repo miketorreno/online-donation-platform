@@ -468,3 +468,37 @@ class SavedCampaignsView(LoginRequiredMixin, ListView):
             .distinct()
             .order_by("-saved_by__created_at")
         )
+
+
+class NotificationsView(LoginRequiredMixin, ListView):
+    context_object_name = "notifications"
+    template_name = "core/notifications.html"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            self.request.user.notifications.select_related("campaign").order_by("-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["unread_count"] = self.request.user.notifications.filter(read=False).count()
+        return ctx
+
+
+@require_POST
+@login_required
+def mark_notification_read(request, pk):
+    notification = get_object_or_404(
+        request.user.notifications, pk=pk
+    )
+    notification.read = True
+    notification.save(update_fields=["read"])
+    return redirect("notifications")
+
+
+@require_POST
+@login_required
+def mark_all_notifications_read(request):
+    request.user.notifications.filter(read=False).update(read=True)
+    return redirect("notifications")

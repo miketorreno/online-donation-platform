@@ -1,0 +1,9 @@
+There's a new update from "{{ campaign.title }}":
+
+{{ update.title }}
+{{ update.body }}
+
+Read the full campaign here: {{ campaign_url }}
+
+Thanks,
+The ODP team

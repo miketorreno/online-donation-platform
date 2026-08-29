@@ -1,0 +1,8 @@
+Heads up — "{{ campaign.title }}" is closing soon.
+
+It only has {{ campaign.days_remaining }} day{{ campaign.days_remaining|pluralize }} left if you still want to support it.
+
+Campaign: {{ campaign_url }}
+
+Thanks,
+The ODP team

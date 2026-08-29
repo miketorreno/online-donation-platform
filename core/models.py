@@ -79,6 +79,14 @@ class Campaign(BaseModel):
         null=True,
         help_text="Optional upload; falls back to the generated gradient cover art.",
     )
+    funded_notified = models.BooleanField(
+        default=False,
+        help_text="Whether the funded notification has already been sent.",
+    )
+    expiring_notified = models.BooleanField(
+        default=False,
+        help_text="Whether the expiring-soon notification has already been sent.",
+    )
 
     class Meta:
         ordering = ["-created_at"]  # Show newest campaigns first by default
@@ -323,4 +331,56 @@ class SavedCampaign(BaseModel):
 
     def __str__(self):
         return f"{self.user} saved {self.campaign.title}"
+
+
+class Notification(BaseModel):
+    """
+    An in-app notification delivered to a recipient (informational only).
+    """
+
+    class Kind(models.TextChoices):
+        UPDATE_POSTED = "update_posted", "Update posted"
+        CAMPAIGN_FUNDED = "campaign_funded", "Campaign funded"
+        EXPIRING_SOON = "expiring_soon", "Expiring soon"
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        help_text="The user who receives this notification.",
+    )
+    kind = models.CharField(
+        max_length=20,
+        choices=Kind.choices,
+        help_text="The type of notification.",
+    )
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        help_text="The related campaign, if any.",
+    )
+    update = models.ForeignKey(
+        CampaignUpdate,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        help_text="The related campaign update, if any.",
+    )
+    message = models.CharField(
+        max_length=300,
+        help_text="Human-readable notification text.",
+    )
+    read = models.BooleanField(default=False, help_text="Whether the user has read it.")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        return f"{self.recipient}: {self.message}"
 

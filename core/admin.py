@@ -5,6 +5,7 @@ from .models import (
     CampaignUpdate,
     Donation,
     EmailVerificationToken,
+    Notification,
     Profile,
     SavedCampaign,
 )
@@ -59,3 +60,10 @@ class EmailVerificationTokenAdmin(admin.ModelAdmin):
 class SavedCampaignAdmin(admin.ModelAdmin):
     list_display = ("user", "campaign", "created_at")
     search_fields = ("user__username", "campaign__title")
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("recipient", "kind", "campaign", "read", "created_at")
+    list_filter = ("kind", "read")
+    search_fields = ("recipient__username", "message")
