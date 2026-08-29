@@ -35,12 +35,12 @@
       <nav aria-label="Filter by category" class="flex flex-wrap items-center gap-2">
         <a
           href="{% querystring category=None page=None %}"
-          class="{% if not active_category %}bg-pine-700 text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
+          class="{% if not active_category %}bg-pine-solid text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
         >All</a>
         {% for value, label in categories %}
           <a
             href="{% querystring category=value page=None %}"
-            class="{% if active_category == value %}bg-pine-700 text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
+            class="{% if active_category == value %}bg-pine-solid text-white{% else %}btn-ghost{% endif %} inline-flex items-center justify-center rounded-full px-5 py-2.5 font-semibold transition"
           >{{ label }}</a>
         {% endfor %}
       </nav>

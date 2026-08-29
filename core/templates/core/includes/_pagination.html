@@ -11,7 +11,7 @@
       {% for n in page_obj.paginator.page_range %}
         <li>
           {% if n == page_obj.number %}
-            <span aria-current="page" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-pine-700 font-bold text-white tabular-nums">{{ n }}</span>
+            <span aria-current="page" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-pine-solid font-bold text-white tabular-nums">{{ n }}</span>
           {% else %}
             <a href="{% querystring page=n %}" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-pine-100 bg-surface font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900 tabular-nums">{{ n }}</a>
           {% endif %}

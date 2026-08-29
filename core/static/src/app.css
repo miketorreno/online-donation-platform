@@ -18,6 +18,11 @@
   --color-rose-500: oklch(58% 0.19 20); /* destructive accents */
   --color-rose-600: oklch(52% 0.19 18);
 
+  --color-pine-solid: oklch(38% 0.09 160);
+  --color-pine-solid-hover: oklch(45% 0.10 158);
+  --color-rose-solid: oklch(52% 0.19 18);
+  --color-pine-dark: oklch(22% 0.07 164);
+
   --color-surface: oklch(99.5% 0.002 160);
   --color-surface-muted: oklch(96% 0.015 158);
   --color-border-soft: oklch(93% 0.02 158);
@@ -78,13 +83,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-pine-700 px-6 py-3 font-semibold text-white transition hover:bg-pine-900 active:scale-[0.98];
-  }
-  .dark .btn-primary {
-    background-color: oklch(38% 0.09 160);
-  }
-  .dark .btn-primary:hover {
-    background-color: oklch(45% 0.10 158);
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-pine-solid px-6 py-3 font-semibold text-white transition hover:bg-pine-solid-hover active:scale-[0.98];
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-border-soft bg-surface px-5 py-2.5 font-semibold text-pine-700 transition hover:border-pine-500 hover:text-pine-900;

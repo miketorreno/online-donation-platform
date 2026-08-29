@@ -13,7 +13,8 @@
     />
     <script>
       (() => {
-        const mode = localStorage.getItem('odp-theme') || 'system';
+        let mode = 'system';
+        try { const v = localStorage.getItem('odp-theme'); if (v === 'light' || v === 'dark' || v === 'system') mode = v; } catch (e) {}
         const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', isDark);
       })();
@@ -24,7 +25,7 @@
   <body class="min-h-screen flex flex-col">
     <a
       href="#main-content"
-      class="skip-link sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-full focus:bg-pine-700 focus:px-4 focus:py-2 focus:text-white"
+      class="skip-link sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-full focus:bg-pine-solid focus:px-4 focus:py-2 focus:text-white"
       >Skip to content</a
     >
 
@@ -125,7 +126,7 @@
                 >
                   Notifications
                   {% if unread_notifications_count %}
-                    <span class="chip bg-marigold-400 text-pine-900">{{ unread_notifications_count }}</span>
+                    <span class="chip bg-marigold-400 text-pine-dark">{{ unread_notifications_count }}</span>
                   {% endif %}
                 </a>
                 <hr class="my-1 border-pine-100" />
@@ -244,10 +245,10 @@
         {% for message in messages %}
           <div
             class="rounded-2xl px-4 py-3 text-sm font-semibold shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]
-              {% if message.tags == 'success' %}bg-pine-700 text-white
-              {% elif message.tags == 'error' %}bg-rose-600 text-white
+              {% if message.tags == 'success' %}bg-pine-solid text-white
+              {% elif message.tags == 'error' %}bg-rose-solid text-white
               {% elif message.tags == 'warning' %}bg-marigold-500 text-ink
-              {% else %}bg-pine-900 text-white{% endif %}"
+              {% else %}bg-pine-solid text-white{% endif %}"
           >
             {{ message }}
           </div>
@@ -268,7 +269,10 @@
 
       const themeLabels = { light: 'Light', dark: 'Dark', system: 'System' };
       const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-      const getThemeMode = () => localStorage.getItem('odp-theme') || 'system';
+      const getThemeMode = () => {
+        try { const v = localStorage.getItem('odp-theme'); if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
+        return 'system';
+      };
       const themeIsDark = (mode) => mode === 'dark' || (mode === 'system' && themeMedia.matches);
 
       const setThemePanelOpen = (panel, open) => {
@@ -306,7 +310,7 @@
         option.addEventListener('click', (e) => {
           e.stopPropagation();
           const mode = option.dataset.theme;
-          localStorage.setItem('odp-theme', mode);
+          try { localStorage.setItem('odp-theme', mode); } catch (e) {}
           applyTheme(mode);
           setThemePanelOpen(option.closest('[data-theme-panel]'), false);
         });
@@ -315,7 +319,14 @@
         if (!e.target.closest('[data-theme-toggle]')) closeThemePanels();
       });
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeThemePanels();
+        if (e.key !== 'Escape') return;
+        let openPanel = null;
+        document.querySelectorAll('[data-theme-panel]').forEach((panel) => {
+          if (!panel.classList.contains('hidden')) openPanel = panel;
+        });
+        if (!openPanel) return;
+        closeThemePanels();
+        if (!openPanel.contains(document.activeElement)) openPanel.previousElementSibling?.focus();
       });
       themeMedia.addEventListener('change', () => applyTheme(getThemeMode()));
       applyTheme(getThemeMode());
