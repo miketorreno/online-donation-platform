@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -202,6 +205,27 @@ BASE_URL = config("BASE_URL", default="http://127.0.0.1:8000")
 # swap in a real gateway by implementing PaymentProvider and setting this to
 # the dotted path of its factory.
 PAYMENT_PROVIDER = config("PAYMENT_PROVIDER", default="simulated")
+
+# DRF (public REST API, Phase 6)
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Online Donation Platform API",
+    "DESCRIPTION": "Public REST API for browsing campaigns and creators.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 # Production security settings (only when DEBUG is off)
 if not DEBUG:

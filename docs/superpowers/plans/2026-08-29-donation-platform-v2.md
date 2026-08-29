@@ -151,13 +151,13 @@ Goal: creator dashboards for campaign performance.
 
 Goal: versioned, documented REST API for campaigns and creators.
 
-- [ ] Add `djangorestframework` (+ `drf-spectacular` for OpenAPI docs) to `pyproject.toml`; `INSTALLED_APPS` (`rest_framework`, `drf_spectacular`); `uv sync`.
-- [ ] `/api/v1/` versioned router; root URLs: `campaigns` (list with search/filter/sort/pagination, retrieve), `campaigns/<slug>/updates/`, `campaigns/<slug>/donations/` (public, limited), `/api/v1/auth/` token endpoints.
-- [ ] Serializers for Campaign (incl. `percentage_raised`, `days_remaining`, supporter_count), CampaignUpdate, Donation (amount, anonymous/username flag, message, donated_at).
-- [ ] Creator/token-authenticated endpoints: create/update campaign, create update, upload cover/update image, own stats.
-- [ ] Permissions: read-only anonymous; write requires token + owner; consistent with `handle_no_permission` semantics (401/403).
-- [ ] `drf-spectacular` schema at `/api/v1/schema/` (+ optional Swagger UI).
-- [ ] Tests: DRF `APIClient` — list/retrieve/filters, auth required for writes, owner-only, schema render works.
+- [x] Add `djangorestframework` (+ `drf-spectacular` for OpenAPI docs) to `pyproject.toml`; `INSTALLED_APPS` (`rest_framework`, `rest_framework.authtoken`, `drf_spectacular`); `uv sync` (DRF 3.18, drf-spectacular 0.30).
+- [x] `/api/v1/` versioned router; root URLs: `campaigns` (list with search/filter/sort/pagination, retrieve), `campaigns/<slug>/updates/`, `campaigns/<slug>/donations/` (public, limited), `/api/v1/auth/token/` token endpoint.
+- [x] Serializers for Campaign (incl. `percentage_raised`, `days_remaining`, supporter_count), CampaignUpdate, Donation (amount, donor_username, message, donated_at).
+- [x] Creator/token-authenticated endpoints: create/update campaign, create update, own stats (`/campaigns/<slug>/stats/`).
+- [x] Permissions: read-only anonymous; write requires token + owner (401/403, consistent with `handle_no_permission` semantics).
+- [x] `drf-spectacular` schema at `/api/v1/schema/` (+ Swagger UI at `/api/v1/schema/swagger/`).
+- [x] Tests in `core/tests/test_api.py` using DRF `APIClient` — list/retrieve/filters, auth required for writes, owner-only, token auth, schema render works.
 
 **Verification:** full suite green; run server, `curl /api/v1/schema/`, smoke a list + an authenticated create.
 

@@ -49,5 +49,6 @@ urlpatterns = [
         name="password_reset_complete",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("api/v1/", include("core.api.urls")),
     path("", include("core.urls")),
 ]
