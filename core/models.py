@@ -223,3 +223,104 @@ class CampaignUpdate(BaseModel):
     def __str__(self):
         return f"{self.title} ({self.campaign.title})"
 
+
+class Profile(BaseModel):
+    """
+    Extended identity fields for a user (created alongside the user).
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+        help_text="The user this profile belongs to.",
+    )
+    display_name = models.CharField(
+        max_length=100, blank=True, help_text="Name to show instead of the username."
+    )
+    bio = models.TextField(
+        blank=True, help_text="A short bio shown on the profile."
+    )
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+        help_text="Optional profile picture.",
+    )
+    timezone = models.CharField(
+        max_length=64, default="UTC", help_text="The user's timezone."
+    )
+    email_verified = models.BooleanField(
+        default=False, help_text="Whether the email address has been verified."
+    )
+    receives_email_updates = models.BooleanField(
+        default=True, help_text="Opt in to email updates for saved campaigns."
+    )
+
+    class Meta:
+        verbose_name = "Profile"
+        verbose_name_plural = "Profiles"
+
+    def __str__(self):
+        return self.display_name or self.user.username
+
+
+class EmailVerificationToken(BaseModel):
+    """
+    Single-use token for verifying a user's email address.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_verification_token",
+        help_text="The user this verification token belongs to.",
+    )
+    token = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField(
+        help_text="When the token stops being valid."
+    )
+
+    class Meta:
+        verbose_name = "Email Verification Token"
+        verbose_name_plural = "Email Verification Tokens"
+
+    def __str__(self):
+        return f"{self.user} ({self.token[:8]}...)"
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+
+class SavedCampaign(BaseModel):
+    """
+    A campaign a user wants to follow (receives update notifications by default).
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_campaigns",
+        help_text="The user who saved this campaign.",
+    )
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+        help_text="The saved campaign.",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "campaign"], name="unique_user_campaign_save"
+            )
+        ]
+        verbose_name = "Saved Campaign"
+        verbose_name_plural = "Saved Campaigns"
+
+    def __str__(self):
+        return f"{self.user} saved {self.campaign.title}"
+

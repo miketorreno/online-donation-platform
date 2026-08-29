@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
@@ -18,8 +19,20 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import CampaignForm, CampaignUpdateForm, DonateForm, StyledUserCreationForm
-from .models import Campaign, CampaignUpdate
+from .forms import (
+    CampaignForm,
+    CampaignUpdateForm,
+    DonateForm,
+    ProfileForm,
+    StyledUserCreationForm,
+)
+from .models import (
+    Campaign,
+    CampaignUpdate,
+    EmailVerificationToken,
+    Profile,
+    SavedCampaign,
+)
 from .services import DonationError, record_donation
 
 
@@ -27,6 +40,15 @@ class SignUpView(CreateView):
     form_class = StyledUserCreationForm
     success_url = reverse_lazy("login")
     template_name = "core/signup.html"
+
+    def form_valid(self, form):
+        from .emails import send_verification_email
+
+        response = super().form_valid(form)
+        user = self.object
+        if user.email:
+            send_verification_email(user)
+        return response
 
 
 class CampaignDetailView(DetailView):
@@ -46,6 +68,12 @@ class CampaignDetailView(DetailView):
             hasattr(self.request, "user") and self.request.user.is_authenticated
             and campaign.creator_id == self.request.user.id
         )
+        if self.request.user.is_authenticated:
+            ctx["is_saved"] = SavedCampaign.objects.filter(
+                user=self.request.user, campaign=campaign
+            ).exists()
+        else:
+            ctx["is_saved"] = False
         return ctx
 
 
@@ -313,3 +341,130 @@ class MyDonationsView(LoginRequiredMixin, ListView):
         total = self.object_list.aggregate(total=Sum("amount"))["total"]
         ctx["total_given"] = total or Decimal("0.00")
         return ctx
+
+
+@login_required
+def donation_export(request):
+    import csv
+
+    from django.utils import timezone
+
+    donations = (
+        request.user.donations.select_related("campaign")
+        .order_by("-donated_at")
+    )
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="donations-{timezone.now().strftime("%Y%m%d")}.csv"'
+    )
+    writer = csv.writer(response)
+    writer.writerow(["donated_at", "campaign", "amount", "message", "transaction_id"])
+    for d in donations:
+        writer.writerow(
+            [
+                d.donated_at.isoformat(),
+                d.campaign.title,
+                str(d.amount),
+                d.message,
+                d.transaction_id or "",
+            ]
+        )
+    return response
+
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    model = Profile
+    context_object_name = "profile"
+    template_name = "core/profile.html"
+
+    def get_object(self, queryset=None):
+        return Profile.objects.get_or_create(user=self.request.user)[0]
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["is_owner"] = True
+        return ctx
+
+
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = Profile
+    form_class = ProfileForm
+    template_name = "core/profile_form.html"
+
+    def get_object(self, queryset=None):
+        return Profile.objects.get_or_create(user=self.request.user)[0]
+
+    def get_success_url(self):
+        return reverse("profile")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Profile updated.")
+        return response
+
+
+class VerifyEmailView(DetailView):
+    model = EmailVerificationToken
+    slug_field = "token"
+    slug_url_kwarg = "token"
+    template_name = "core/verify_email.html"
+
+    def get_object(self, queryset=None):
+        season = EmailVerificationToken.objects.filter(
+            token=self.kwargs.get("token")
+        ).select_related("user").first()
+        if season is None:
+            return None
+        return season
+
+    def get(self, request, *args, **kwargs):
+        token = self.get_object()
+        if token is None or token.is_expired:
+            messages.error(request, "This verification link is invalid or has expired.")
+            return redirect("campaign-list")
+        profile = Profile.objects.get_or_create(user=token.user)[0]
+        profile.email_verified = True
+        profile.save(update_fields=["email_verified"])
+        token.delete()
+        messages.success(request, "Your email has been verified.")
+        return redirect("profile")
+
+
+@login_required
+def resend_verification(request):
+    from .emails import send_verification_email
+
+    profile = Profile.objects.get_or_create(user=request.user)[0]
+    if profile.email_verified:
+        messages.info(request, "Your email is already verified.")
+    else:
+        send_verification_email(request.user)
+        messages.success(request, "A new verification email has been sent.")
+    return redirect("profile")
+
+
+@require_POST
+@login_required
+def toggle_saved(request, slug):
+    campaign = get_object_or_404(Campaign, slug=slug)
+    saved, created = SavedCampaign.objects.get_or_create(
+        user=request.user, campaign=campaign
+    )
+    if created:
+        messages.success(request, f"Saved \"{campaign.title}\".")
+    else:
+        saved.delete()
+        messages.info(request, f"Unsaved \"{campaign.title}\".")
+    return redirect("campaign-detail", slug=campaign.slug)
+
+
+class SavedCampaignsView(LoginRequiredMixin, ListView):
+    context_object_name = "campaigns"
+    template_name = "core/my_saved.html"
+
+    def get_queryset(self):
+        return (
+            Campaign.objects.filter(saved_by__user=self.request.user)
+            .distinct()
+            .order_by("-saved_by__created_at")
+        )

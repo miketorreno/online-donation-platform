@@ -3,7 +3,7 @@ from decimal import Decimal
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from core.models import Campaign, CampaignUpdate
+from core.models import Campaign, CampaignUpdate, Profile
 
 
 class StyledAuthenticationForm(AuthenticationForm):
@@ -14,6 +14,16 @@ class StyledAuthenticationForm(AuthenticationForm):
 
 
 class StyledUserCreationForm(UserCreationForm):
+    email = forms.EmailField(
+        label="Email address",
+        required=True,
+        help_text="We'll send a verification link to this address.",
+        widget=forms.EmailInput(attrs={"class": "field-input"}),
+    )
+
+    class Meta(UserCreationForm.Meta):
+        fields = ("username", "email")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
@@ -70,6 +80,30 @@ class CampaignUpdateForm(forms.ModelForm):
             "body": forms.Textarea(attrs={"class": "field-input", "rows": 6}),
             "image": forms.ClearableFileInput(attrs={"class": "field-input"}),
             "is_pinned": forms.CheckboxInput(attrs={"class": "h-5 w-5 accent-pine-700"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.setdefault(
+                "aria-describedby", f"id_{name}-help id_{name}-error"
+            )
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["display_name", "bio", "avatar", "timezone", "receives_email_updates"]
+        widgets = {
+            "display_name": forms.TextInput(attrs={"class": "field-input"}),
+            "bio": forms.Textarea(attrs={"class": "field-input", "rows": 4}),
+            "avatar": forms.ClearableFileInput(attrs={"class": "field-input"}),
+            "timezone": forms.TextInput(
+                attrs={"class": "field-input", "placeholder": "UTC"}
+            ),
+            "receives_email_updates": forms.CheckboxInput(
+                attrs={"class": "h-5 w-5 accent-pine-700"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):

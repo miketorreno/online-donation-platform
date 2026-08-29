@@ -13,14 +13,24 @@ from .views import (
     DonateView,
     MyCampaignsView,
     MyDonationsView,
+    ProfileUpdateView,
+    ProfileView,
+    SavedCampaignsView,
     SignUpView,
+    VerifyEmailView,
 )
 
 urlpatterns = [
     path("", CampaignListView.as_view(), name="campaign-list"),
     path("signup/", SignUpView.as_view(), name="signup"),
+    path("accounts/verify/resend/", views.resend_verification, name="resend-verification"),
+    path("accounts/verify/<str:token>/", VerifyEmailView.as_view(), name="verify-email"),
     path("my/campaigns/", MyCampaignsView.as_view(), name="my-campaigns"),
     path("my/donations/", MyDonationsView.as_view(), name="my-donations"),
+    path("my/donations/export/", views.donation_export, name="donation-export"),
+    path("my/saved/", SavedCampaignsView.as_view(), name="my-saved"),
+    path("profile/", ProfileView.as_view(), name="profile"),
+    path("profile/edit/", ProfileUpdateView.as_view(), name="profile-edit"),
     # campaign-create MUST precede every campaigns/<slug:slug>/... route
     # so "new" is never captured as a slug.
     path("campaigns/new/", CampaignCreateView.as_view(), name="campaign-create"),
@@ -46,6 +56,11 @@ urlpatterns = [
         "campaigns/<slug:slug>/toggle-active/",
         views.toggle_active,
         name="campaign-toggle-active",
+    ),
+    path(
+        "campaigns/<slug:slug>/toggle-saved/",
+        views.toggle_saved,
+        name="campaign-toggle-saved",
     ),
     path("campaigns/<slug:slug>/donate/", DonateView.as_view(), name="campaign-donate"),
     path("campaigns/<slug:slug>/", CampaignDetailView.as_view(), name="campaign-detail"),

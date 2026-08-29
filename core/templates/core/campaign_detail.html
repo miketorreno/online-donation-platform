@@ -64,6 +64,15 @@
               <span class="chip bg-rose-500/10 text-rose-600">This campaign has ended</span>
             </p>
           {% endif %}
+
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'campaign-toggle-saved' campaign.slug %}" class="mt-2">
+              {% csrf_token %}
+              <button type="submit" class="btn-ghost w-full">
+                {% if is_saved %}Saved ✓{% else %}Save this campaign{% endif %}
+              </button>
+            </form>
+          {% endif %}
         </div>
       </aside>
     </div>

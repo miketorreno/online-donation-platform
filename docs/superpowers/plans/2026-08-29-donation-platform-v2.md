@@ -84,26 +84,26 @@ Goal: let creators post public updates/milestones and attach a real cover image.
 Goal: richer identities, verified emails, password reset, donation export, saved campaigns.
 
 ### 3.1 `Profile`
-- [ ] `Profile` model: `OneToOneField(AUTH_USER_MODEL, related_name="profile", CASCADE)`, `display_name`, `bio` (TextField blank), `avatar` (ImageField blank/null, upload_to `avatars/`), `timezone` (CharField default UTC), `email_verified` (BooleanField default False), `receives_email_updates` (BooleanField default True), inherits `BaseModel`.
-- [ ] Signal `post_save` (or `Profile` creation in signup view) to autocreate profile for new users; auto-create/backfill for existing users in a data migration or management command.
-- [ ] `ProfileView` + `ProfileUpdateView` (owner-only via UserPassesTestMixin), avatar upload → MEDIA_ROOT; template `core/profile.html`, `core/profile_form.html`.
-- [ ] Admin registration.
-- [ ] Tests: autocreation, owner-only edit, avatar upload, bio/display saved.
+- [x] `Profile` model: `OneToOneField(AUTH_USER_MODEL, related_name="profile", CASCADE)`, `display_name`, `bio` (TextField blank), `avatar` (ImageField blank/null, upload_to `avatars/`), `timezone` (CharField default UTC), `email_verified` (BooleanField default False), `receives_email_updates` (BooleanField default True), inherits `BaseModel`.
+- [x] Signal `post_save` autocreates/backfills a `Profile` for users (wired in `core/apps.py.ready`).
+- [x] `ProfileView` + `ProfileUpdateView` (current-user only), avatar upload → MEDIA_ROOT; template `core/profile.html`, `core/profile_form.html`.
+- [x] Admin registration.
+- [x] Tests: autocreation, update, avatar/bio/display saved, anonymous redirect.
 
 ### 3.2 Email verification
-- [ ] `EmailVerificationToken` model (OneToOne user, token, created_at, expiry), or utils using signed tokens.
-- [ ] Send verification email on signup (via email module / Celery task from Phase 4); verify route `/accounts/verify/<token>/`; mark `email_verified`; resend endpoint with cooldown; expiry handling.
-- [ ] Tests: valid token verifies, invalid/expired token rejected, resend.
+- [x] `EmailVerificationToken` model (OneToOne user + token + expiry) with 24h TTL; `core/emails.py` helpers (`create_verification_token`, `send_verification_email`).
+- [x] Send verification email on signup (email field added to signup form); verify route `/accounts/verify/<token>/` marks `email_verified`; resend endpoint (with already-verified guard + expiry handling).
+- [x] Tests: valid token verifies, invalid/expired token rejected, resend sends / skips when verified.
 
 ### 3.3 Password reset
-- [ ] Custom `PasswordResetForm`/templates replacing stock `auth.urls` defaults (template files under `templates/registration/`): `password_reset_form.html`, `password_reset_email.html`, `password_reset_done.html`, `password_reset_confirm.html`, `password_reset_complete.html`, styled with design system.
-- [ ] Wire in `odp/urls.py` (custom `PasswordResetView`/`ConfirmView`).
-- [ ] Tests: email generated, token flow completes.
+- [x] Custom templates under `templates/registration/`: `password_reset_form.html`, `password_reset_email.html`, `password_reset_subject.txt`, `password_reset_done.html`, `password_reset_confirm.html`, `password_reset_complete.html`, styled with design system.
+- [x] Wired in `odp/urls.py` with explicit `PasswordResetView`/`ConfirmView`/`Done`/`Complete` routes.
+- [x] Tests: email generated, full reset flow (session-token set-password flow).
 
 ### 3.4 Donation history export & saved campaigns
-- [ ] CSV export on `MyDonationsView` (`?export=csv` or dedicated route `/my/donations/export/`) streaming rows (donated_at, campaign, amount, message, transaction_id).
-- [ ] `SavedCampaign` model (FK user, FK campaign, unique_together, created_at) + `{% url %}` toggle + `SavedCampaignsView` dashboard + "save" button on campaign card/detail.
-- [ ] Tests: CSV content/headers, toggle, saved list isolation, anonymous redirect.
+- [x] CSV export on `/my/donations/export/` streaming rows (donated_at, campaign, amount, message, transaction_id) + link in `my_donations.html`.
+- [x] `SavedCampaign` model (FK user, FK campaign, unique constraint, created_at) + `{% url 'campaign-toggle-saved' %}` toggle + `SavedCampaignsView` dashboard (`my_saved.html`) + "Save this campaign" button on detail.
+- [x] Tests: CSV content/headers, toggle, saved list isolation, anonymous redirect.
 
 **Verification:** full suite green; manual signup → verify → reset → export → save flows.
 

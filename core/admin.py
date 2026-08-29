@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Campaign, CampaignUpdate, Donation
+from .models import (
+    Campaign,
+    CampaignUpdate,
+    Donation,
+    EmailVerificationToken,
+    Profile,
+    SavedCampaign,
+)
 
 
 @admin.register(Campaign)
@@ -33,3 +40,22 @@ class CampaignUpdateAdmin(admin.ModelAdmin):
     list_display = ("title", "campaign", "is_pinned", "created_at")
     list_filter = ("is_pinned", "campaign")
     search_fields = ("title", "body")
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "display_name", "email_verified", "timezone")
+    list_filter = ("email_verified", "receives_email_updates")
+    search_fields = ("user__username", "display_name")
+
+
+@admin.register(EmailVerificationToken)
+class EmailVerificationTokenAdmin(admin.ModelAdmin):
+    list_display = ("user", "expires_at")
+    search_fields = ("user__username", "token")
+
+
+@admin.register(SavedCampaign)
+class SavedCampaignAdmin(admin.ModelAdmin):
+    list_display = ("user", "campaign", "created_at")
+    search_fields = ("user__username", "campaign__title")

@@ -182,6 +182,9 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@localhost")
 
+# Base URL for building absolute links in emails (no trailing slash).
+BASE_URL = config("BASE_URL", default="http://127.0.0.1:8000")
+
 # Payment gateway abstraction. "simulated" is the default (no keys required);
 # swap in a real gateway by implementing PaymentProvider and setting this to
 # the dotted path of its factory.

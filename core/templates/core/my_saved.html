@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Saved campaigns — ODP{% endblock %}
+
+{% block content %}
+  <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <h1 class="font-display text-3xl font-extrabold tracking-tight md:text-4xl">Saved campaigns</h1>
+    <p class="mt-1 text-sm text-ink/60">Campaigns you're following.</p>
+
+    {% if campaigns %}
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for campaign in campaigns %}
+          {% include "core/includes/_campaign_card.html" with campaign=campaign %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card mt-6 p-10 text-center">
+        <p class="font-display text-xl font-bold tracking-tight">Nothing saved yet</p>
+        <p class="mx-auto mt-2 max-w-sm text-ink/60">
+          Hit the save button on a campaign to follow its progress here.
+        </p>
+        <a href="{% url 'campaign-list' %}" class="btn-primary mx-auto mt-5">Explore campaigns</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
