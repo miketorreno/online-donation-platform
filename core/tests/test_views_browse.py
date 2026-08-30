@@ -128,7 +128,7 @@ class CampaignListViewTests(TestCase):
         self.assertEqual(resp.context["active_sort"], "funded")
         self.assertEqual(list(resp.context["categories"]), Campaign.Category.choices)
         self.assertIn(
-            "bg-pine-700 text-white",
+            "bg-pine-solid text-white",
             resp.content.decode("utf-8"),
             "active category pill should be highlighted",
         )
