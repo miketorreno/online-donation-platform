@@ -229,7 +229,10 @@ SPECTACULAR_SETTINGS = {
 
 # Production security settings (only when DEBUG is off)
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # Default to enforcing HTTPS, but allow override via env (e.g. local dev
+    # behind a plain-HTTP proxy, or behind a TLS terminator that doesn't set
+    # the forwarded-proto header).
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

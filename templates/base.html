@@ -11,13 +11,21 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Public+Sans:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (() => {
+        let mode = 'system';
+        try { const v = localStorage.getItem('odp-theme'); if (v === 'light' || v === 'dark' || v === 'system') mode = v; } catch (e) {}
+        const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+      })();
+    </script>
     <link rel="stylesheet" href="{% static 'css/app.css' %}" />
   </head>
 
   <body class="min-h-screen flex flex-col">
     <a
       href="#main-content"
-      class="skip-link sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-full focus:bg-pine-700 focus:px-4 focus:py-2 focus:text-white"
+      class="skip-link sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-full focus:bg-pine-solid focus:px-4 focus:py-2 focus:text-white"
       >Skip to content</a
     >
 
@@ -30,6 +38,58 @@
         <div class="hidden md:flex items-center gap-3">
           <a href="{% url 'campaign-list' %}" class="font-semibold text-pine-700 hover:text-pine-900">Explore</a>
           <a href="{% url 'campaign-create' %}" class="btn-primary px-5! py-2.5!">Start a campaign</a>
+          <div class="relative" data-theme-toggle>
+            <button
+              type="button"
+              class="btn-ghost py-2!"
+              data-theme-trigger
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-icon="light" aria-hidden="true">
+                <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-icon="dark" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" data-theme-icon="system" aria-hidden="true">
+                <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.677A.75.75 0 0 1 13.26 18H6.74a.75.75 0 0 1-.484-1.323A3.501 3.501 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+              </svg>
+              <span data-theme-label>System</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div class="hidden absolute right-0 mt-2 w-44 rounded-2xl bg-surface p-2 shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]" data-theme-panel>
+              <button type="button" data-theme-option data-theme="light" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                  <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z" />
+                </svg>
+                <span class="flex-1 text-left">Light</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-check aria-hidden="true">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button type="button" data-theme-option data-theme="dark" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
+                </svg>
+                <span class="flex-1 text-left">Dark</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-check aria-hidden="true">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button type="button" data-theme-option data-theme="system" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900" aria-current="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.677A.75.75 0 0 1 13.26 18H6.74a.75.75 0 0 1-.484-1.323A3.501 3.501 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+                </svg>
+                <span class="flex-1 text-left">System</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" data-theme-check aria-hidden="true">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
           {% if user.is_authenticated %}
             <div class="group relative">
               <button
@@ -43,7 +103,7 @@
                   <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition absolute right-0 mt-2 w-48 rounded-2xl bg-white p-2 shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]">
+              <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition absolute right-0 mt-2 w-48 rounded-2xl bg-surface p-2 shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]">
                 <a
                   href="{% url 'my-campaigns' %}"
                   class="block rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900"
@@ -66,7 +126,7 @@
                 >
                   Notifications
                   {% if unread_notifications_count %}
-                    <span class="chip bg-marigold-400 text-pine-900">{{ unread_notifications_count }}</span>
+                    <span class="chip bg-marigold-400 text-pine-dark">{{ unread_notifications_count }}</span>
                   {% endif %}
                 </a>
                 <hr class="my-1 border-pine-100" />
@@ -90,7 +150,7 @@
         <button
           id="nav-toggle"
           type="button"
-          class="md:hidden inline-flex items-center justify-center rounded-full border border-pine-100 bg-white p-2 text-pine-700"
+          class="md:hidden inline-flex items-center justify-center rounded-full border border-pine-100 bg-surface p-2 text-pine-700"
           aria-controls="mobile-menu"
           aria-expanded="false"
           aria-label="Toggle menu"
@@ -101,7 +161,59 @@
         </button>
       </div>
 
-      <div id="mobile-menu" class="hidden md:hidden border-t border-pine-100 bg-white px-4 py-3">
+      <div id="mobile-menu" class="hidden md:hidden border-t border-pine-100 bg-surface px-4 py-3">
+        <div class="relative w-full text-left" data-theme-toggle>
+          <button
+            type="button"
+            class="btn-ghost w-full"
+            data-theme-trigger
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-icon="light" aria-hidden="true">
+              <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-icon="dark" aria-hidden="true">
+              <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" data-theme-icon="system" aria-hidden="true">
+              <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.677A.75.75 0 0 1 13.26 18H6.74a.75.75 0 0 1-.484-1.323A3.501 3.501 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+            </svg>
+            <span data-theme-label>System</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 ml-auto" aria-hidden="true">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div class="hidden absolute right-0 mt-2 w-44 rounded-2xl bg-surface p-2 shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]" data-theme-panel>
+            <button type="button" data-theme-option data-theme="light" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z" />
+              </svg>
+              <span class="flex-1 text-left">Light</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-check aria-hidden="true">
+                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button type="button" data-theme-option data-theme="dark" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
+              </svg>
+              <span class="flex-1 text-left">Dark</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden" data-theme-check aria-hidden="true">
+                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button type="button" data-theme-option data-theme="system" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-pine-700 hover:bg-pine-50 hover:text-pine-900" aria-current="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.105a3.501 3.501 0 0 0 1.1 1.677A.75.75 0 0 1 13.26 18H6.74a.75.75 0 0 1-.484-1.323A3.501 3.501 0 0 0 7.355 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm1.5 0a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .75.75v7.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75v-7.5Z" clip-rule="evenodd" />
+              </svg>
+              <span class="flex-1 text-left">System</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" data-theme-check aria-hidden="true">
+                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <a href="{% url 'campaign-list' %}" class="block py-2 font-semibold text-pine-700">Explore</a>
         <a href="{% url 'campaign-create' %}" class="block py-2 font-semibold text-pine-700">Start a campaign</a>
         {% if user.is_authenticated %}
@@ -133,10 +245,10 @@
         {% for message in messages %}
           <div
             class="rounded-2xl px-4 py-3 text-sm font-semibold shadow-[0_1px_2px_rgba(24,58,48,0.06),0_12px_32px_-16px_rgba(24,58,48,0.18)]
-              {% if message.tags == 'success' %}bg-pine-700 text-white
-              {% elif message.tags == 'error' %}bg-rose-600 text-white
+              {% if message.tags == 'success' %}bg-pine-solid text-white
+              {% elif message.tags == 'error' %}bg-rose-solid text-white
               {% elif message.tags == 'warning' %}bg-marigold-500 text-ink
-              {% else %}bg-pine-900 text-white{% endif %}"
+              {% else %}bg-pine-solid text-white{% endif %}"
           >
             {{ message }}
           </div>
@@ -154,6 +266,70 @@
 
     <script>
       document.getElementById('nav-toggle')?.addEventListener('click', () => document.getElementById('mobile-menu')?.classList.toggle('hidden'));
+
+      const themeLabels = { light: 'Light', dark: 'Dark', system: 'System' };
+      const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+      const getThemeMode = () => {
+        try { const v = localStorage.getItem('odp-theme'); if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
+        return 'system';
+      };
+      const themeIsDark = (mode) => mode === 'dark' || (mode === 'system' && themeMedia.matches);
+
+      const setThemePanelOpen = (panel, open) => {
+        panel.classList.toggle('hidden', !open);
+        panel.previousElementSibling.setAttribute('aria-expanded', String(open));
+      };
+      const closeThemePanels = () => {
+        document.querySelectorAll('[data-theme-panel]').forEach((panel) => setThemePanelOpen(panel, false));
+      };
+      const applyTheme = (mode) => {
+        document.documentElement.classList.toggle('dark', themeIsDark(mode));
+        document.querySelectorAll('[data-theme-toggle]').forEach((toggle) => {
+          toggle.querySelector('[data-theme-label]').textContent = themeLabels[mode];
+          toggle.querySelectorAll('[data-theme-icon]').forEach((icon) => {
+            icon.classList.toggle('hidden', icon.dataset.themeIcon !== mode);
+          });
+          toggle.querySelectorAll('[data-theme-option]').forEach((option) => {
+            const active = option.dataset.theme === mode;
+            option.querySelector('[data-theme-check]').classList.toggle('hidden', !active);
+            option.toggleAttribute('aria-current', active);
+          });
+        });
+      };
+
+      document.querySelectorAll('[data-theme-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const panel = trigger.nextElementSibling;
+          const willOpen = panel.classList.contains('hidden');
+          closeThemePanels();
+          if (willOpen) setThemePanelOpen(panel, true);
+        });
+      });
+      document.querySelectorAll('[data-theme-option]').forEach((option) => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const mode = option.dataset.theme;
+          try { localStorage.setItem('odp-theme', mode); } catch (e) {}
+          applyTheme(mode);
+          setThemePanelOpen(option.closest('[data-theme-panel]'), false);
+        });
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('[data-theme-toggle]')) closeThemePanels();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        let openPanel = null;
+        document.querySelectorAll('[data-theme-panel]').forEach((panel) => {
+          if (!panel.classList.contains('hidden')) openPanel = panel;
+        });
+        if (!openPanel) return;
+        closeThemePanels();
+        if (!openPanel.contains(document.activeElement)) openPanel.previousElementSibling?.focus();
+      });
+      themeMedia.addEventListener('change', () => applyTheme(getThemeMode()));
+      applyTheme(getThemeMode());
     </script>
   </body>
 </html>

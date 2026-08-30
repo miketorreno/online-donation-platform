@@ -16,7 +16,7 @@
         {% csrf_token %}
         <button
           type="submit"
-          class="inline-flex items-center justify-center gap-2 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition hover:bg-rose-500 active:scale-[0.98]"
+          class="inline-flex items-center justify-center gap-2 rounded-full bg-rose-solid px-6 py-3 font-semibold text-white transition hover:bg-rose-500 active:scale-[0.98]"
         >Yes, delete this campaign</button>
         <a href="{{ object.get_absolute_url }}" class="btn-ghost">Cancel</a>
       </form>

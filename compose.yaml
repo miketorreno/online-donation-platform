@@ -17,12 +17,22 @@ services:
   web:
     image: miketorreno/online-donation-platform:${COMMIT_SHA:-latest}
     restart: unless-stopped
-    # Bind to the loopback interface only: the host Nginx reverse proxy
-    # forwards requests here, so the app is never exposed publicly directly.
+    # For local dev (Docker Desktop/WSL2) the port is published on all
+    # interfaces so the host can reach it via localhost. On a VPS the host
+    # Nginx reverse proxy forwards requests here; narrow the bind as needed.
     ports:
-      - "127.0.0.1:${WEB_PORT:-8000}:${WEB_PORT:-8000}"
+      - "${WEB_PORT:-8000}:${WEB_PORT:-8000}"
     env_file:
       - .env
+    # TCP-connect healthcheck on the app port: unlike an HTTP GET it is immune
+    # to the production settings (SECURE_SSL_REDIRECT 301s and ALLOWED_HOSTS
+    # 400s), so it only reflects whether gunicorn is actually listening.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,os; s=socket.create_connection(('127.0.0.1', int(os.environ.get('WEB_PORT','8000'))), 2); s.close()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
     depends_on:
       db:
         condition: service_healthy
