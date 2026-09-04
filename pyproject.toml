@@ -31,5 +31,5 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "django-debug-toolbar==7.1.1",
-    "pipdeptree==4.2.1",
+    "pipdeptree==4.2.3",
 ]
